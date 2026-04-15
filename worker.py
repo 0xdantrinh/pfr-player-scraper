@@ -1,18 +1,32 @@
 import os
 import json
 import time
+import logging
 import boto3
 from scraper import scrape_player, fetch_page, parse_tables
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SQS_URL = os.environ.get("SQS_QUEUE_URL")
 S3_BUCKET = os.environ.get("S3_BUCKET")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
+# Validate required environment variables
+if not SQS_URL:
+    raise ValueError("SQS_QUEUE_URL environment variable is required")
+if not S3_BUCKET:
+    raise ValueError("S3_BUCKET environment variable is required")
+
 sqs = boto3.client("sqs", region_name=AWS_REGION)
 s3 = boto3.client("s3", region_name=AWS_REGION)
 
+logging.info(f"Connected to SQS queue: {SQS_URL}")
+logging.info(f"S3 bucket: {S3_BUCKET}")
+logging.info(f"AWS region: {AWS_REGION}")
+
 def process_message(msg):
     url = msg["Body"]
+    logging.info(f"Processing message: {url}")
 
     html = fetch_page(url)
     data = parse_tables(html)
@@ -28,33 +42,47 @@ def process_message(msg):
         ContentType="application/json"
     )
 
-    print("uploaded", key)
+    logging.info(f"Uploaded {key}")
 
 
 def loop():
+    logging.info("Starting worker loop...")
     while True:
-        resp = sqs.receive_message(
-            QueueUrl=SQS_URL,
-            MaxNumberOfMessages=5,
-            WaitTimeSeconds=10
-        )
+        try:
+            resp = sqs.receive_message(
+                QueueUrl=SQS_URL,
+                MaxNumberOfMessages=5,
+                WaitTimeSeconds=10
+            )
 
-        msgs = resp.get("Messages", [])
+            msgs = resp.get("Messages", [])
+            
+            if msgs:
+                logging.info(f"Received {len(msgs)} message(s)")
+            else:
+                logging.debug("No messages in queue")
 
-        for m in msgs:
-            try:
-                process_message(m)
+            for m in msgs:
+                try:
+                    process_message(m)
 
-                sqs.delete_message(
-                    QueueUrl=SQS_URL,
-                    ReceiptHandle=m["ReceiptHandle"]
-                )
+                    sqs.delete_message(
+                        QueueUrl=SQS_URL,
+                        ReceiptHandle=m["ReceiptHandle"]
+                    )
 
-            except Exception as e:
-                print("error", e)
+                except Exception as e:
+                    logging.error(f"Error processing message: {e}", exc_info=True)
 
-        time.sleep(1)
+            time.sleep(1)
+        except Exception as e:
+            logging.error(f"Error in loop: {e}", exc_info=True)
+            time.sleep(5)
 
 
 if __name__ == "__main__":
-    loop()
+    logging.info("PFR Player Scraper Worker starting...")
+    try:
+        loop()
+    except KeyboardInterrupt:
+        logging.info("Worker stopped by user")
