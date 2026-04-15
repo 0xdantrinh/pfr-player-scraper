@@ -77,3 +77,46 @@ aws ecs register-task-definition --cli-input-json file://aws/ecs/scraper-task.js
 aws ecs run-task --cluster scraper-cluster --launch-type FARGATE --task-definition pfr-scraper
 ```
 
+
+## Queue + Storage Architecture
+
+Scraping pipeline:
+
+player URL
+   ↓
+SQS queue
+   ↓
+ECS scraper workers
+   ↓
+FlareSolverr
+   ↓
+S3 JSON storage
+
+### Environment variables
+
+Required for worker:
+
+SQS_QUEUE_URL=<queue>
+S3_BUCKET=<bucket>
+AWS_REGION=<region>
+
+### Example: enqueue players
+
+```
+cat player_urls.txt | python enqueue_players.py $SQS_QUEUE_URL
+```
+
+### S3 Output
+
+Objects stored as:
+
+```
+players/<player_id>.json
+```
+
+Example:
+
+```
+players/BradTo00.json
+```
+
