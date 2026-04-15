@@ -2,8 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import sys
+import os
 
-FLARESOLVERR_URL = "http://localhost:8191/v1"
+FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
 def fetch_page(url):
     payload = {
@@ -27,7 +28,6 @@ def parse_tables(html):
 
     for table in tables:
         table_id = table.get("id", "unknown")
-        headers = [th.get_text(strip=True) for th in table.find_all("th")]
 
         rows = []
         for tr in table.find_all("tr"):
