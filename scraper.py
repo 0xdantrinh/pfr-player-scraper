@@ -61,17 +61,27 @@ def extract_player_info(soup):
     if weight:
         info["weight_lb"] = weight
 
-    college = meta.find(string=lambda x: x and "College" in x)
+    college = meta.find("a", href=lambda x: x and "colleges" in x)
     if college:
-        info["college"] = college.strip()
+        info["college"] = college.get_text(strip=True)
 
-    draft = meta.find(string=lambda x: x and "Draft" in x)
-    if draft:
-        info["draft"] = draft.strip()
+    draft_text = meta.find(string=lambda x: x and "Draft" in x)
+
+    if draft_text:
+        m = re.search(r"(\d+).. round \((\d+).. overall\).*?(\d{4})", draft_text)
+        if m:
+            info["draft"] = {
+                "round": int(m.group(1)),
+                "pick": int(m.group(2)),
+                "year": int(m.group(3))
+            }
 
     pos = meta.find(string=lambda x: x and "Position" in x)
+
     if pos:
-        info["position"] = pos.strip()
+        m = re.search(r"Position:\s*([A-Z]+)", pos)
+        if m:
+            info["position"] = m.group(1)
 
     return info
 
@@ -120,7 +130,25 @@ def extract_related_links(soup):
     }
 
 
-def parse_tables_from_soup(soup, results):
+def normalize_rows(headers, rows):
+    results = []
+
+    for r in rows:
+        if len(r) != len(headers):
+            continue
+
+        obj = {}
+
+        for i, col in enumerate(headers):
+            key = col.lower().replace(" ", "_")
+            obj[key] = r[i]
+
+        results.append(obj)
+
+    return results
+
+
+def parse_tables_from_soup(soup, stats):
     for table in soup.find_all("table"):
         table_id = table.get("id")
 
@@ -147,20 +175,17 @@ def parse_tables_from_soup(soup, results):
 
             rows.append(cols)
 
-        results[table_id] = {
-            "columns": headers,
-            "rows": rows
-        }
+        stats[table_id] = normalize_rows(headers, rows)
 
 
-def parse_comment_tables(soup, results):
+def parse_comment_tables(soup, stats):
     for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
         if "table" not in comment:
             continue
 
         try:
             comment_soup = BeautifulSoup(comment, "lxml")
-            parse_tables_from_soup(comment_soup, results)
+            parse_tables_from_soup(comment_soup, stats)
         except Exception:
             pass
 
@@ -170,21 +195,21 @@ def parse_page(html, url):
 
     player_slug = url.split("/")[-1].replace(".htm", "")
 
-    results = {
+    stats = {}
+
+    parse_tables_from_soup(soup, stats)
+    parse_comment_tables(soup, stats)
+
+    return {
         "player_id": player_slug,
         "source_url": url,
-        "scraped_at": datetime.utcnow().isoformat() + "Z"
+        "scraped_at": datetime.utcnow().isoformat() + "Z",
+        "player_info": extract_player_info(soup),
+        "hof_monitor": extract_hof_monitor(soup),
+        "transactions": extract_transactions(soup),
+        "related_pages": extract_related_links(soup),
+        "stats": stats
     }
-
-    results["player_info"] = extract_player_info(soup)
-    results["hof_monitor"] = extract_hof_monitor(soup)
-    results["transactions"] = extract_transactions(soup)
-    results["related_pages"] = extract_related_links(soup)
-
-    parse_tables_from_soup(soup, results)
-    parse_comment_tables(soup, results)
-
-    return results
 
 
 def scrape_player(url):
