@@ -134,14 +134,17 @@ def normalize_rows(headers, rows):
     results = []
 
     for r in rows:
-        if len(r) != len(headers):
-            continue
+        # Trim or pad row to match header length
+        row = r[:len(headers)]
+
+        if len(row) < len(headers):
+            row += [""] * (len(headers) - len(row))
 
         obj = {}
 
         for i, col in enumerate(headers):
-            key = col.lower().replace(" ", "_")
-            obj[key] = r[i]
+            key = col.strip().lower().replace(" ", "_") or f"col_{i}"
+            obj[key] = row[i]
 
         results.append(obj)
 
