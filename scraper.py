@@ -176,6 +176,10 @@ def parse_tables_from_soup(soup, stats):
             if not cols:
                 continue
 
+            # skip empty season rows
+            if not cols[0]:
+                continue
+
             # skip header rows
             if headers and cols == headers:
                 continue
@@ -183,8 +187,13 @@ def parse_tables_from_soup(soup, stats):
             if headers and cols and cols[0] == headers[0]:
                 continue
 
+            # skip group header rows (Receiving | Rushing | etc)
+            group_headers = ["Receiving","Rushing","Scrimmage","Punt Returns","Kick Returns","Def Interceptions","Fumbles","Touchdowns","PAT","FG"]
+            if any(c in group_headers for c in cols):
+                continue
+
             # skip summary rows
-            if cols and cols[0] in ["6 Yrs", "17 Game Avg"]:
+            if cols[0] in ["6 Yrs","17 Game Avg"]:
                 continue
 
             rows.append(cols)
