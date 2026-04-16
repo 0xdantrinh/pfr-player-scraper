@@ -299,3 +299,108 @@ S3 Data Lake
 
 MIT
 
+
+---
+
+# Team Scraper (Offensive Context Dataset)
+
+The repository now includes a **team scraper** for Pro-Football-Reference team pages. This enables collecting team-level context metrics used to normalize player performance.
+
+This data helps models distinguish between:
+
+- good player on a weak offense
+- average player on an elite offense
+
+## Team Scraper File
+
+```
+team_scraper.py
+```
+
+## Team Page Format
+
+Team pages follow the structure:
+
+```
+https://www.pro-football-reference.com/teams/{team}/{season}.htm
+```
+
+Example:
+
+```
+https://www.pro-football-reference.com/teams/dal/2023.htm
+```
+
+## Output Location
+
+Team data is stored separately from players:
+
+```
+teams/{TEAM_ID}/{SEASON}.json
+```
+
+Example:
+
+```
+teams/DAL/2023.json
+```
+
+This keeps the dataset modular.
+
+## Example Output
+
+```
+{
+  "team_id": "DAL",
+  "season": 2023,
+  "record": {
+    "wins": 12,
+    "losses": 5,
+    "ties": 0
+  },
+  "coach": "Mike McCarthy",
+  "offense_context": {
+    "points_rank": 5,
+    "yards_rank": 3,
+    "pass_yards_rank": 4,
+    "rush_yards_rank": 14
+  }
+}
+```
+
+## Running Team Scraper
+
+```
+python team_scraper.py DAL 2023
+```
+
+This produces:
+
+```
+teams/DAL/2023.json
+```
+
+## Dataset Join Strategy
+
+Player and team datasets can be joined using:
+
+```
+player_stats.team
+player_stats.season
+```
+
+with
+
+```
+team_stats.team_id
+team_stats.season
+```
+
+This enables features such as:
+
+- player yardage share
+- touchdown share
+- offense-adjusted production
+
+These features significantly improve player rating models.
+
