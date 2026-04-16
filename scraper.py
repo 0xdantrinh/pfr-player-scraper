@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup, Comment
 import json
 import sys
 import os
+from datetime import datetime
+import re
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
@@ -22,15 +24,25 @@ def fetch_page(url):
 
     r.raise_for_status()
 
-    data = r.json()
+    return r.json()["solution"]["response"]
 
-    return data["solution"]["response"]
+
+def parse_height(text):
+    m = re.search(r"(\d+)-(\d+)", text)
+    if m:
+        return int(m.group(1)) * 12 + int(m.group(2))
+
+
+def parse_weight(text):
+    m = re.search(r"(\d+)lb", text)
+    if m:
+        return int(m.group(1))
 
 
 def extract_player_info(soup):
     info = {}
-    meta = soup.find("div", {"id": "meta"})
 
+    meta = soup.find("div", {"id": "meta"})
     if not meta:
         return info
 
@@ -38,78 +50,85 @@ def extract_player_info(soup):
     if name_tag:
         info["name"] = name_tag.get_text(strip=True)
 
-    ps = meta.find_all("p")
+    text = meta.get_text(" ", strip=True)
 
-    for p in ps:
-        text = p.get_text(" ", strip=True)
+    height = parse_height(text)
+    weight = parse_weight(text)
 
-        if "Position" in text:
-            info["position"] = text
-        elif "College" in text:
-            info["college"] = text
-        elif "Height" in text or "Weight" in text:
-            info["physical"] = text
-        elif "Draft" in text:
-            info["draft"] = text
+    if height:
+        info["height_in"] = height
+
+    if weight:
+        info["weight_lb"] = weight
+
+    college = meta.find(string=lambda x: x and "College" in x)
+    if college:
+        info["college"] = college.strip()
+
+    draft = meta.find(string=lambda x: x and "Draft" in x)
+    if draft:
+        info["draft"] = draft.strip()
+
+    pos = meta.find(string=lambda x: x and "Position" in x)
+    if pos:
+        info["position"] = pos.strip()
 
     return info
 
 
 def extract_hof_monitor(soup):
-    hof = {}
     text = soup.get_text(" ", strip=True)
 
-    if "HOF Monitor" in text or "HOF" in text:
-        try:
-            for line in text.split():
-                if line.replace(".", "", 1).isdigit():
-                    hof["score"] = line
-                    break
-        except Exception:
-            pass
+    m = re.search(r"HOF Monitor[^0-9]*([0-9]+\.[0-9]+)", text)
 
-    return hof
+    if m:
+        return {"score": float(m.group(1))}
+
+    return {}
 
 
 def extract_transactions(soup):
-    transactions = []
+    results = []
 
-    trans_section = soup.find(string=lambda x: x and "Transactions" in x)
+    section = soup.find("div", id="transactions")
 
-    if trans_section:
-        ul = trans_section.find_parent().find_next("ul")
+    if not section:
+        return results
 
-        if ul:
-            for li in ul.find_all("li"):
-                transactions.append(li.get_text(" ", strip=True))
+    for li in section.find_all("li"):
+        results.append(li.get_text(" ", strip=True))
 
-    return transactions
+    return results
 
 
 def extract_related_links(soup):
-    links = {}
+    gamelogs = set()
+    splits = set()
 
     for a in soup.find_all("a", href=True):
         href = a["href"]
 
-        if "gamelog" in href:
-            links.setdefault("gamelogs", []).append(href)
-        if "splits" in href:
-            links.setdefault("splits", []).append(href)
+        if "/gamelog" in href:
+            gamelogs.add(href)
 
-    return links
+        if "/splits" in href:
+            splits.add(href)
+
+    return {
+        "gamelogs": list(gamelogs),
+        "splits": list(splits)
+    }
 
 
 def parse_tables_from_soup(soup, results):
-    tables = soup.find_all("table")
-
-    for table in tables:
+    for table in soup.find_all("table"):
         table_id = table.get("id")
 
         if not table_id:
             continue
 
         headers = []
+
         header_row = table.find("tr")
 
         if header_row:
@@ -120,8 +139,13 @@ def parse_tables_from_soup(soup, results):
         for tr in table.find_all("tr"):
             cols = [td.get_text(strip=True) for td in tr.find_all(["td", "th"])]
 
-            if cols and cols != headers:
-                rows.append(cols)
+            if not cols:
+                continue
+
+            if cols == headers:
+                continue
+
+            rows.append(cols)
 
         results[table_id] = {
             "columns": headers,
@@ -130,15 +154,15 @@ def parse_tables_from_soup(soup, results):
 
 
 def parse_comment_tables(soup, results):
-    comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+        if "table" not in comment:
+            continue
 
-    for comment in comments:
-        if "table" in comment:
-            try:
-                comment_soup = BeautifulSoup(comment, "lxml")
-                parse_tables_from_soup(comment_soup, results)
-            except Exception:
-                pass
+        try:
+            comment_soup = BeautifulSoup(comment, "lxml")
+            parse_tables_from_soup(comment_soup, results)
+        except Exception:
+            pass
 
 
 def parse_page(html, url):
@@ -148,7 +172,8 @@ def parse_page(html, url):
 
     results = {
         "player_id": player_slug,
-        "source_url": url
+        "source_url": url,
+        "scraped_at": datetime.utcnow().isoformat() + "Z"
     }
 
     results["player_info"] = extract_player_info(soup)
