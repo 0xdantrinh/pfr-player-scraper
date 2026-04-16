@@ -55,24 +55,24 @@ def loop():
             WaitTimeSeconds=10
         )
 
-            msgs = resp.get("Messages", [])
-            
-            if msgs:
-                logging.info(f"Received {len(msgs)} message(s)")
-            else:
-                logging.debug("No messages in queue")
+        msgs = resp.get("Messages", [])
+        
+        if msgs:
+            logging.info(f"Received {len(msgs)} message(s)")
+        else:
+            logging.debug("No messages in queue")
 
-            for m in msgs:
-                try:
-                    process_message(m)
+        for m in msgs:
+            try:
+                process_message(m)
 
-                    sqs.delete_message(
-                        QueueUrl=SQS_URL,
-                        ReceiptHandle=m["ReceiptHandle"]
-                    )
+                sqs.delete_message(
+                    QueueUrl=SQS_URL,
+                    ReceiptHandle=m["ReceiptHandle"]
+                )
 
-                except Exception as e:
-                    logging.error(f"Error processing message: {e}", exc_info=True)
+            except Exception as e:
+                logging.error(f"Error processing message: {e}", exc_info=True)
 
         time.sleep(random.uniform(0.5,2.0))
 
