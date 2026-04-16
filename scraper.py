@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 import json
 import sys
 import os
@@ -49,17 +49,58 @@ def extract_player_info(soup):
             info["college"] = text
         elif "Height" in text or "Weight" in text:
             info["physical"] = text
+        elif "Draft" in text:
+            info["draft"] = text
 
     return info
 
 
-def parse_tables(html):
-    soup = BeautifulSoup(html, "lxml")
+def extract_hof_monitor(soup):
+    hof = {}
+    text = soup.get_text(" ", strip=True)
 
-    results = {}
+    if "HOF Monitor" in text or "HOF" in text:
+        try:
+            for line in text.split():
+                if line.replace(".", "", 1).isdigit():
+                    hof["score"] = line
+                    break
+        except Exception:
+            pass
 
-    results["player_info"] = extract_player_info(soup)
+    return hof
 
+
+def extract_transactions(soup):
+    transactions = []
+
+    trans_section = soup.find(string=lambda x: x and "Transactions" in x)
+
+    if trans_section:
+        ul = trans_section.find_parent().find_next("ul")
+
+        if ul:
+            for li in ul.find_all("li"):
+                transactions.append(li.get_text(" ", strip=True))
+
+    return transactions
+
+
+def extract_related_links(soup):
+    links = {}
+
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+
+        if "gamelog" in href:
+            links.setdefault("gamelogs", []).append(href)
+        if "splits" in href:
+            links.setdefault("splits", []).append(href)
+
+    return links
+
+
+def parse_tables_from_soup(soup, results):
     tables = soup.find_all("table")
 
     for table in tables:
@@ -87,15 +128,46 @@ def parse_tables(html):
             "rows": rows
         }
 
+
+def parse_comment_tables(soup, results):
+    comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+
+    for comment in comments:
+        if "table" in comment:
+            try:
+                comment_soup = BeautifulSoup(comment, "lxml")
+                parse_tables_from_soup(comment_soup, results)
+            except Exception:
+                pass
+
+
+def parse_page(html, url):
+    soup = BeautifulSoup(html, "lxml")
+
+    player_slug = url.split("/")[-1].replace(".htm", "")
+
+    results = {
+        "player_id": player_slug,
+        "source_url": url
+    }
+
+    results["player_info"] = extract_player_info(soup)
+    results["hof_monitor"] = extract_hof_monitor(soup)
+    results["transactions"] = extract_transactions(soup)
+    results["related_pages"] = extract_related_links(soup)
+
+    parse_tables_from_soup(soup, results)
+    parse_comment_tables(soup, results)
+
     return results
 
 
 def scrape_player(url):
     html = fetch_page(url)
 
-    data = parse_tables(html)
+    data = parse_page(html, url)
 
-    player_id = url.split("/")[-1].replace(".htm", "")
+    player_id = data["player_id"]
 
     with open(f"{player_id}.json", "w") as f:
         json.dump(data, f, indent=2)
