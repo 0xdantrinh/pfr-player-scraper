@@ -10,6 +10,11 @@ FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1"
 
 
 def fetch_page(url):
+    # ensure session exists
+    try:
+        requests.post(FLARESOLVERR_URL, json={"cmd":"sessions.create","session":"pfr"}, timeout=(10,30))
+    except Exception:
+        pass
     payload = {
         "cmd": "request.get",
         "url": url,
@@ -17,7 +22,7 @@ def fetch_page(url):
         "maxTimeout": 300000
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=300)
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
