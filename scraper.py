@@ -12,10 +12,10 @@ def fetch_page(url):
         "cmd": "request.get",
         "url": url,
         "session": "pfr",
-        "maxTimeout": 120000
+        "maxTimeout": 300000
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=120)
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=300)
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
