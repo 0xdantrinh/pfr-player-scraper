@@ -2,6 +2,7 @@ import os
 import json
 import time
 import logging
+import random
 import boto3
 from scraper import fetch_page, parse_page
 
@@ -48,12 +49,11 @@ def process_message(msg):
 def loop():
     logging.info("Starting worker loop...")
     while True:
-        try:
-            resp = sqs.receive_message(
-                QueueUrl=SQS_URL,
-                MaxNumberOfMessages=5,
-                WaitTimeSeconds=10
-            )
+        resp = sqs.receive_message(
+            QueueUrl=SQS_URL,
+            MaxNumberOfMessages=2,
+            WaitTimeSeconds=10
+        )
 
             msgs = resp.get("Messages", [])
             
@@ -74,10 +74,7 @@ def loop():
                 except Exception as e:
                     logging.error(f"Error processing message: {e}", exc_info=True)
 
-            time.sleep(1)
-        except Exception as e:
-            logging.error(f"Error in loop: {e}", exc_info=True)
-            time.sleep(5)
+        time.sleep(random.uniform(0.5,2.0))
 
 
 if __name__ == "__main__":
