@@ -3,7 +3,7 @@ import json
 import time
 import logging
 import boto3
-from scraper import scrape_player, fetch_page, parse_tables
+from scraper import fetch_page, parse_page
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -29,9 +29,9 @@ def process_message(msg):
     logging.info(f"Processing message: {url}")
 
     html = fetch_page(url)
-    data = parse_tables(html)
+    data = parse_page(html, url)
 
-    player_id = url.split("/")[-1].replace(".htm","")
+    player_id = data.get("player_id")
 
     key = f"players/{player_id}.json"
 
