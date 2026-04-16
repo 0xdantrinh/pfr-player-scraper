@@ -148,6 +148,13 @@ def normalize_rows(headers, rows):
             key = col.strip().lower().replace(" ", "_") or f"col_{i}"
             obj[key] = row[i]
 
+                # remove header rows
+        yr = obj.get("year_id") or obj.get("year") or obj.get("season")
+        if yr in ["Season","Year",""]:
+            continue
+        if yr and not str(yr).isdigit():
+            continue
+
         results.append(obj)
 
     return results
