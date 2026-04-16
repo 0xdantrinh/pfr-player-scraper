@@ -176,7 +176,15 @@ def parse_tables_from_soup(soup, stats):
             if not cols:
                 continue
 
-            if cols == headers:
+            # skip header rows
+            if headers and cols == headers:
+                continue
+
+            if headers and cols and cols[0] == headers[0]:
+                continue
+
+            # skip summary rows
+            if cols and cols[0] in ["6 Yrs", "17 Game Avg"]:
                 continue
 
             rows.append(cols)
