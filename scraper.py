@@ -163,10 +163,12 @@ def parse_tables_from_soup(soup, stats):
 
         headers = []
 
-        header_row = table.select_one("thead tr:last-child") or table.find("tr")
+        header_row = table.select_one("thead tr:not(.over_header)") or table.select_one("thead tr:last-child") or table.find("tr")
 
         if header_row:
-            headers = [th.get_text(strip=True) for th in header_row.find_all("th")]
+            headers = [th.get("data-stat") for th in header_row.select("th[data-stat]") if th.get("data-stat")]
+        if not headers:
+            headers = [th.get_text(strip=True).lower().replace(" ","_") for th in header_row.find_all("th") if th.get_text(strip=True)]
 
         rows = []
 
