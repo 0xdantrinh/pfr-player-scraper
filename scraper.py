@@ -61,7 +61,6 @@ def extract_hof_monitor(soup):
 
     if "HOF Monitor" in text or "HOF" in text:
         try:
-            # simple heuristic
             for line in text.split():
                 if line.replace(".", "", 1).isdigit():
                     hof["score"] = line
@@ -92,7 +91,6 @@ def extract_related_links(soup):
 
     for a in soup.find_all("a", href=True):
         href = a["href"]
-        text = a.get_text(strip=True)
 
         if "gamelog" in href:
             links.setdefault("gamelogs", []).append(href)
@@ -143,10 +141,15 @@ def parse_comment_tables(soup, results):
                 pass
 
 
-def parse_page(html):
+def parse_page(html, url):
     soup = BeautifulSoup(html, "lxml")
 
-    results = {}
+    player_slug = url.split("/")[-1].replace(".htm", "")
+
+    results = {
+        "player_id": player_slug,
+        "source_url": url
+    }
 
     results["player_info"] = extract_player_info(soup)
     results["hof_monitor"] = extract_hof_monitor(soup)
@@ -162,9 +165,9 @@ def parse_page(html):
 def scrape_player(url):
     html = fetch_page(url)
 
-    data = parse_page(html)
+    data = parse_page(html, url)
 
-    player_id = url.split("/")[-1].replace(".htm", "")
+    player_id = data["player_id"]
 
     with open(f"{player_id}.json", "w") as f:
         json.dump(data, f, indent=2)
