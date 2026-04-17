@@ -43,9 +43,25 @@ def normalize_rows(headers, rows):
             key = col.strip().lower().replace(" ", "_")
             obj[key] = row[i]
 
-        yr = obj.get("year") or obj.get("season")
-        if yr in ["Season", "Year", ""]:
+        yr = obj.get("year_id") or obj.get("year") or obj.get("season")
+
+        # remove blank rows
+        if not yr:
             continue
+
+        # remove column header rows
+        if yr in ["Season", "Year"]:
+            continue
+
+        # remove career / totals rows
+        if yr == "Career":
+            continue
+
+        # remove section label rows (Receiving, Rushing, etc)
+        if not str(yr)[0].isdigit():
+            continue
+
+        obj["year_id"] = str(yr).replace("*", "")
 
         out.append(obj)
     return out
