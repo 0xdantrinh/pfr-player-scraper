@@ -15,7 +15,8 @@ def fetch_page(url):
         "url": url,
         "session": "pfr",
         "session_ttl_minutes": 60,
-        "maxTimeout": 300000
+        "maxTimeout": 300000,
+        "tabs_till_verify": 5
     }
 
     r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
