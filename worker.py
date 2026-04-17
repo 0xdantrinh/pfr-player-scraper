@@ -4,6 +4,7 @@ import time
 import random
 import boto3
 from scraper import fetch_page, parse_page
+from cfb_scraper import parse_page as parse_cfb_page
 
 SQS_URL = os.environ.get("SQS_QUEUE_URL")
 S3_BUCKET = os.environ.get("S3_BUCKET")
@@ -17,11 +18,15 @@ def process_message(msg):
     url = msg["Body"]
 
     html = fetch_page(url)
-    data = parse_page(html, url)
 
-    player_id = data.get("player_id")
-
-    key = f"players/{player_id}.json"
+    if "sports-reference.com/cfb" in url:
+        data = parse_cfb_page(html, url)
+        slug = data.get("player_id")
+        key = f"college/{slug}.json"
+    else:
+        data = parse_page(html, url)
+        player_id = data.get("player_id")
+        key = f"players/{player_id}.json"
 
     s3.put_object(
         Bucket=S3_BUCKET,
