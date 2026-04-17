@@ -102,7 +102,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run scraper manually:
+Run NFL player scraper manually:
 
 ```
 python scraper.py https://www.pro-football-reference.com/players/B/BradTo00.htm
@@ -113,6 +113,66 @@ Output:
 ```
 BradTo00.json
 ```
+
+---
+
+# College Football Reference Scraper
+
+The repository now includes a **College Football Reference player scraper** for collecting college statistics from Sports Reference.
+
+Example player page:
+
+```
+https://www.sports-reference.com/cfb/players/ceedee-lamb-1.html
+```
+
+## Scraper File
+
+```
+cfb_scraper.py
+```
+
+This scraper uses the **same FlareSolverr request pipeline** as the main Pro‑Football‑Reference scraper to avoid Cloudflare blocking.
+
+## Running the College Scraper
+
+```
+python cfb_scraper.py https://www.sports-reference.com/cfb/players/ceedee-lamb-1.html
+```
+
+Example output:
+
+```
+cfb_ceedee-lamb-1.json
+```
+
+## Output Structure
+
+Example:
+
+```
+{
+  "player_id": "ceedee-lamb-1",
+  "source": "sports-reference-cfb",
+  "source_url": "https://www.sports-reference.com/cfb/players/ceedee-lamb-1.html",
+  "scraped_at": "2026-04-17T00:00:00Z",
+  "player_info": {
+    "name": "CeeDee Lamb",
+    "school": "Oklahoma",
+    "position": "WR"
+  },
+  "stats": {
+    "receiving_and_rushing": [...],
+    "punt_and_kick_returns": [...],
+    "scoring": [...]
+  }
+}
+```
+
+All stat tables are automatically extracted, including tables hidden inside HTML comments (a common Sports Reference pattern).
+
+This keeps the parsing logic consistent with the NFL scraper.
+
 
 ---
 
