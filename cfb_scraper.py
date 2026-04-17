@@ -134,6 +134,27 @@ def parse_page(html, url):
     parse_tables(soup, stats)
     parse_comment_tables(soup, stats)
 
+    # compute simple career totals from receiving table if present
+    career = {}
+    rec_rows = stats.get("receiving_standard", [])
+    if rec_rows:
+        total_rec = 0
+        total_yds = 0
+        total_td = 0
+        for r in rec_rows:
+            try:
+                total_rec += int(r.get("rec") or 0)
+                total_yds += int(r.get("rec_yds") or 0)
+                total_td += int(r.get("rec_td") or 0)
+            except Exception:
+                pass
+
+        career["receiving"] = {
+            "rec": total_rec,
+            "yards": total_yds,
+            "td": total_td
+        }
+
     return {
         "player_id": slug,
         "source": "sports-reference-cfb",
@@ -141,6 +162,7 @@ def parse_page(html, url):
         "scraped_at": datetime.utcnow().isoformat() + "Z",
         "player_info": extract_meta(soup),
         "stats": stats,
+        "career": career
     }
 
 
