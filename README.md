@@ -404,3 +404,87 @@ This enables features such as:
 
 These features significantly improve player rating models.
 
+
+
+# FlareSolverr Configuration (Important)
+
+To reliably bypass Cloudflare Turnstile challenges on Pro‑Football‑Reference the scraper uses a persistent FlareSolverr session and several performance optimizations.
+
+The scraper sends requests using:
+
+```
+{
+  "cmd": "request.get",
+  "url": url,
+  "session": "pfr",
+  "session_ttl_minutes": 60,
+  "maxTimeout": 300000,
+  "tabs_till_verify": 5,
+  "disableMedia": true
+}
+```
+
+Explanation of parameters:
+
+session
+
+Keeps a persistent browser instance so Cloudflare cookies are reused.
+
+session_ttl_minutes
+
+Automatically rotates the session after the TTL to prevent stale browser state.
+
+maxTimeout
+
+Maximum time allowed to solve Cloudflare challenges (milliseconds).
+
+300000 = 5 minutes.
+
+tabs_till_verify
+
+Automatically presses TAB multiple times then SPACE to click the Cloudflare Turnstile checkbox.
+
+This is required because Turnstile challenges do not automatically resolve without interaction.
+
+disableMedia
+
+Prevents images, fonts, and other heavy resources from loading.
+
+Benefits:
+
+• Faster page loads
+• Lower Chrome CPU usage
+• Reduced memory consumption
+
+Example local FlareSolverr run:
+
+```
+docker run -d  --name=flaresolverr  -p 8191:8191  -e LOG_LEVEL=info  -e DISABLE_MEDIA=true  --restart unless-stopped  ghcr.io/flaresolverr/flaresolverr:latest
+```
+
+Recommended concurrency:
+
+```
+1 FlareSolverr instance
+2 scraper workers
+```
+
+Running too many concurrent workers against a single FlareSolverr instance can cause Chrome timeouts.
+
+
+## Recommended Local FlareSolverr Setup
+
+Run FlareSolverr with media disabled (much faster for PFR):
+
+```
+docker run -d \
+ --name flaresolverr \
+ -p 8191:8191 \
+ -e LOG_LEVEL=info \
+ -e DISABLE_MEDIA=true \
+ --restart unless-stopped \
+ ghcr.io/flaresolverr/flaresolverr:latest
+```
+
+This disables images, fonts, and other heavy resources inside the browser which significantly speeds up navigation while still allowing Cloudflare challenges to execute.
+
