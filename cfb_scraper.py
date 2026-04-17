@@ -112,7 +112,7 @@ def extract_meta(soup):
 def parse_page(html, url):
     soup = BeautifulSoup(html, "lxml")
 
-    slug = url.split("/")[-1].replace(".html", "")
+    slug = url.split("/")[-1].split(".")[0]
 
     stats = {}
     parse_tables(soup, stats)

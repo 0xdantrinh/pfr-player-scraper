@@ -5,6 +5,7 @@ import logging
 import random
 import boto3
 from scraper import fetch_page, parse_page
+from cfb_scraper import parse_page as parse_cfb_page
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -30,11 +31,15 @@ def process_message(msg):
     logging.info(f"Processing message: {url}")
 
     html = fetch_page(url)
-    data = parse_page(html, url)
 
-    player_id = data.get("player_id")
-
-    key = f"players/{player_id}.json"
+    if "/cfb/players/" in url:
+        data = parse_cfb_page(html, url)
+        slug = data.get("player_id")
+        key = f"college/{slug}.json"
+    else:
+        data = parse_page(html, url)
+        player_id = data.get("player_id")
+        key = f"players/{player_id}.json"
 
     s3.put_object(
         Bucket=S3_BUCKET,
