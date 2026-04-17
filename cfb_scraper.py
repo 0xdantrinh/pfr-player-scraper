@@ -2,15 +2,30 @@ import requests
 from bs4 import BeautifulSoup, Comment
 import json
 import sys
+import os
 from datetime import datetime
 
-HEADERS = {"User-Agent": "Mozilla/5.0"}
+FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
 
 def fetch_page(url):
-    r = requests.get(url, headers=HEADERS, timeout=60)
+    payload = {
+        "cmd": "request.get",
+        "url": url,
+        "session": "pfr",
+        "session_ttl_minutes": 60,
+        "maxTimeout": 300000,
+        "tabs_till_verify": 5
+    }
+
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
+
+    if r.status_code != 200:
+        print("FlareSolverr error:", r.text)
+
     r.raise_for_status()
-    return r.text
+
+    return r.json()["solution"]["response"]
 
 
 def normalize_rows(headers, rows):
