@@ -9,13 +9,13 @@ FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1"
 
 
 def fetch_page(url):
+    # Optimized FlareSolverr request: avoid challenge interaction when not needed
     payload = {
         "cmd": "request.get",
         "url": url,
         "session": "pfr",
         "session_ttl_minutes": 60,
-        "maxTimeout": 300000,
-        "tabs_till_verify": 5
+        "maxTimeout": 60000
     }
 
     r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
