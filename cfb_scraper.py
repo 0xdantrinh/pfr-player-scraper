@@ -9,7 +9,7 @@ FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1"
 
 
 def fetch_page(url):
-    # Optimized FlareSolverr request: avoid challenge interaction when not needed
+    # Fast request first (no challenge interaction)
     payload = {
         "cmd": "request.get",
         "url": url,
@@ -18,14 +18,29 @@ def fetch_page(url):
         "maxTimeout": 60000
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,60))
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
 
     r.raise_for_status()
 
-    return r.json()["solution"]["response"]
+    data = r.json()
+    html = data["solution"]["response"]
+
+    # Detect Cloudflare challenge page
+    if "cf-chl" in html.lower() or "just a moment" in html.lower():
+        print("Challenge detected, retrying with solver...")
+
+        payload["tabs_till_verify"] = 5
+        payload["maxTimeout"] = 300000
+
+        r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
+        r.raise_for_status()
+        data = r.json()
+        html = data["solution"]["response"]
+
+    return html
 
 
 def normalize_rows(headers, rows):
