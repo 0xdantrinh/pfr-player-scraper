@@ -13,31 +13,6 @@ AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 sqs = boto3.client("sqs", region_name=AWS_REGION)
 s3 = boto3.client("s3", region_name=AWS_REGION)
 
-FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
-SESSION_ID = "pfr"
-
-
-def ensure_session():
-    try:
-        import requests
-        payload = {"cmd": "sessions.create", "session": SESSION_ID}
-        r = requests.post(FLARESOLVERR_URL, json=payload, timeout=30)
-        if r.status_code == 200:
-            print("FlareSolverr session ensured:", SESSION_ID)
-    except Exception as e:
-        print("session create error", e)
-
-
-def destroy_session():
-    try:
-        import requests
-        payload = {"cmd": "sessions.destroy", "session": SESSION_ID}
-        requests.post(FLARESOLVERR_URL, json=payload, timeout=30)
-        print("FlareSolverr session destroyed:", SESSION_ID)
-    except Exception as e:
-        print("session destroy error", e)
-
-
 def process_message(msg):
     url = msg["Body"]
 
@@ -88,8 +63,4 @@ def loop():
 
 
 if __name__ == "__main__":
-    ensure_session()
-    try:
-        loop()
-    finally:
-        destroy_session()
+    loop()
