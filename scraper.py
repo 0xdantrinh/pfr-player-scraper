@@ -1,4 +1,6 @@
 import requests
+import random
+import time
 from bs4 import BeautifulSoup, Comment
 import json
 import sys
@@ -8,18 +10,44 @@ import re
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
+SESSION_POOL=[f"pfr-{i}" for i in range(1,7)]
+session_counts={s:0 for s in SESSION_POOL}
+SESSION_LIMIT=30
+
+def choose_session():
+    import requests
+    session=random.choice(SESSION_POOL)
+    session_counts[session]+=1
+    if session_counts[session]>=SESSION_LIMIT:
+        try:
+            requests.post(FLARESOLVERR_URL,json={"cmd":"sessions.destroy","session":session},timeout=10)
+        except: pass
+        try:
+            requests.post(FLARESOLVERR_URL,json={"cmd":"sessions.create","session":session},timeout=10)
+        except: pass
+        session_counts[session]=0
+    return session
+
 
 def fetch_page(url):
     # Fast request first (no challenge interaction)
     payload = {
         "cmd": "request.get",
         "url": url,
-        "session": "pfr",
+        "session": choose_session(),
         "session_ttl_minutes": 60,
         "maxTimeout": 120000
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,120))
+    last_exc=None
+    for attempt in range(3):
+        try:
+            r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,120))
+            break
+        except Exception as e:
+            last_exc=e
+            if attempt==2: raise
+            time.sleep(5)
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
