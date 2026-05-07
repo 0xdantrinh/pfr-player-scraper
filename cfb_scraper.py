@@ -1,3 +1,4 @@
+import re
 import requests
 from bs4 import BeautifulSoup, Comment
 import json
@@ -124,22 +125,33 @@ def parse_comment_tables(soup, stats):
 
 def extract_meta(soup):
     info = {}
-    meta = soup.find("div", id="info")
-    if not meta:
-        return info
 
-    h1 = meta.find("h1")
-    if h1:
-        info["name"] = h1.get_text(strip=True)
+    # Name — try div#info or div#meta
+    for div_id in ("info", "meta"):
+        container = soup.find("div", id=div_id)
+        if container:
+            h1 = container.find("h1")
+            if h1:
+                info["name"] = h1.get_text(strip=True)
+                break
 
-    for p in meta.find_all("p"):
+    # Bio paragraphs — search the full page so we're not sensitive to nesting
+    for p in soup.find_all("p"):
         txt = p.get_text(" ", strip=True)
-        if "School:" in txt:
+        if "School:" in txt and "school" not in info:
             a = p.find("a")
             if a:
                 info["school"] = a.get_text(strip=True)
-        if "Position:" in txt:
+        if "Position:" in txt and "position" not in info:
             info["position"] = txt.split("Position:")[-1].strip()
+        if "Draft:" in txt and "draft" not in info:
+            m = re.search(r"(\d+)(?:st|nd|rd|th) round.*?(\d+)(?:st|nd|rd|th) overall.*?(\d{4})", txt)
+            if m:
+                info["draft"] = {
+                    "round": int(m.group(1)),
+                    "pick":  int(m.group(2)),
+                    "year":  int(m.group(3)),
+                }
 
     return info
 
