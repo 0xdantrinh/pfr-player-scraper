@@ -7,18 +7,22 @@ from datetime import datetime
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
+# Sticky session for sports-reference.com/cfb — separate domain from
+# pro-football-reference.com, so needs its own Cloudflare cookie.
+CFB_SESSION = "cfb-main"
+
 
 def fetch_page(url):
     # Fast request first (no challenge interaction)
     payload = {
         "cmd": "request.get",
         "url": url,
-        "session": "pfr",
+        "session": CFB_SESSION,
         "session_ttl_minutes": 60,
-        "maxTimeout": 60000
+        "maxTimeout": 120000
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,60))
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,120))
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)

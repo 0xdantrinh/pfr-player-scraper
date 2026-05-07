@@ -1,5 +1,4 @@
 import requests
-import random
 import time
 from bs4 import BeautifulSoup, Comment
 import json
@@ -10,23 +9,9 @@ import re
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
-SESSION_POOL=[f"pfr-{i}" for i in range(1,7)]
-session_counts={s:0 for s in SESSION_POOL}
-SESSION_LIMIT=30
-
-def choose_session():
-    import requests
-    session=random.choice(SESSION_POOL)
-    session_counts[session]+=1
-    if session_counts[session]>=SESSION_LIMIT:
-        try:
-            requests.post(FLARESOLVERR_URL,json={"cmd":"sessions.destroy","session":session},timeout=10)
-        except: pass
-        try:
-            requests.post(FLARESOLVERR_URL,json={"cmd":"sessions.create","session":session},timeout=10)
-        except: pass
-        session_counts[session]=0
-    return session
+# Sticky session for pro-football-reference.com. Solve the Cloudflare challenge
+# once and reuse the cookie for all subsequent NFL player page requests.
+PFR_SESSION = "pfr-main"
 
 
 def fetch_page(url):
@@ -34,7 +19,7 @@ def fetch_page(url):
     payload = {
         "cmd": "request.get",
         "url": url,
-        "session": choose_session(),
+        "session": PFR_SESSION,
         "session_ttl_minutes": 60,
         "maxTimeout": 120000
     }
