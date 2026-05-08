@@ -244,44 +244,88 @@ def build_season_items(player_id: str, scraped: dict) -> list[dict]:
     return items
 
 
-def build_career_item(player_id: str, scraped: dict) -> dict:
-    """Aggregate pro career totals (NFL+XFL+UFL only, college excluded).
+def _sum_passing(seasons: list[dict]) -> dict | None:
+    """Sum passing stats across a list of season rows. Returns None if no attempts."""
+    pa = sum(s.get("attempts") or 0 for s in seasons)
+    if not pa:
+        return None
+    pc  = sum(s.get("completions") or 0 for s in seasons)
+    py  = sum(s.get("yards") or 0 for s in seasons)
+    pt  = sum(s.get("touchdowns") or 0 for s in seasons)
+    pi  = sum(s.get("interceptions") or 0 for s in seasons)
+    g   = sum(s.get("games") or 0 for s in seasons)
+    gs  = sum(s.get("games_started") or 0 for s in seasons)
+    return _strip_nulls({
+        "attempts":      _to_decimal(pa),
+        "completions":   _to_decimal(pc),
+        "yards":         _to_decimal(py),
+        "touchdowns":    _to_decimal(pt),
+        "interceptions": _to_decimal(pi),
+        "cmpPct":        _to_decimal(round(pc / pa * 100, 1)) if pa else None,
+        "yardsPerAttempt": _to_decimal(round(py / pa, 2)) if pa else None,
+        "gamesPlayed":   _to_decimal(g),
+        "gamesStarted":  _to_decimal(gs),
+    })
 
-    These map to the existing CAREER item shape so cross-league-link.mjs and
-    the model's nfl_seasons_played / nfl_games_played features continue to
-    work without changes.
+
+def build_career_item(player_id: str, scraped: dict) -> dict:
+    """Aggregate pro career totals split by league.
+
+    Produces per-league career buckets (nflCareer, uflCareer, xflCareer, etc.)
+    plus overall pro totals. Awards from the page are stored here too.
     """
     seasons = scraped.get("stats", {}).get("passing", [])
-    pro = [s for s in seasons if (s.get("league") or "").upper() != "FBS"]
+    COLLEGE_LEAGUES = {"FBS", "D2", "D3", "JUCO", "NAIA"}
+    pro = [s for s in seasons if (s.get("league") or "").upper() not in COLLEGE_LEAGUES]
     if not pro:
-        return _strip_nulls({})
+        return {}
 
-    g = sum((s.get("games") or 0) for s in pro)
-    gs = sum((s.get("games_started") or 0) for s in pro)
-    pa = sum((s.get("attempts") or 0) for s in pro)
-    pc = sum((s.get("completions") or 0) for s in pro)
-    py = sum((s.get("yards") or 0) for s in pro)
-    pt = sum((s.get("touchdowns") or 0) for s in pro)
-    pi = sum((s.get("interceptions") or 0) for s in pro)
-    seasons_played = len({s.get("year_id") for s in pro})
+    # Per-league buckets
+    by_league: dict[str, list] = {}
+    for s in pro:
+        lg = (s.get("league") or "OTHER").upper()
+        by_league.setdefault(lg, []).append(s)
+
+    # Overall pro totals (games only from seasons that have real game counts)
+    total_g  = sum(s.get("games") or 0 for s in pro)
+    total_gs = sum(s.get("games_started") or 0 for s in pro)
+    total_sp = len({s.get("year_id") for s in pro})
+
+    # Build per-league career sub-objects (key = e.g. "uflCareer", "nflCareer")
+    league_careers: dict[str, Any] = {}
+    for lg, rows in by_league.items():
+        key = f"{lg.lower()}Career"
+        totals = _sum_passing(rows)
+        if totals:
+            league_careers[key] = totals
+
+    # Awards
+    raw_awards = scraped.get("awards", [])
+    awards_list = [
+        _strip_nulls({
+            "award":  a.get("award"),
+            "year":   _to_decimal(a.get("year")),
+            "detail": a.get("detail"),
+        })
+        for a in raw_awards if a.get("award")
+    ] if raw_awards else None
 
     return _strip_nulls({
         "PK":            f"PLAYER#{player_id}",
         "SK":            "CAREER",
         "entityType":    "CAREER",
         "footballdbId":  scraped.get("footballdb_id"),
-        "seasonsPlayed": _to_decimal(seasons_played),
-        "gamesPlayed":   _to_decimal(g),
-        "gamesStarted":  _to_decimal(gs),
-        "passing":       _strip_nulls({
-            "attempts":     _to_decimal(pa),
-            "completions":  _to_decimal(pc),
-            "yards":        _to_decimal(py),
-            "touchdowns":   _to_decimal(pt),
-            "interceptions": _to_decimal(pi),
-        }),
-        "source":     "footballdb",
-        "updatedAt":  time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "seasonsPlayed": _to_decimal(total_sp),
+        "gamesPlayed":   _to_decimal(total_g),
+        "gamesStarted":  _to_decimal(total_gs),
+        # Overall passing (all pro leagues combined)
+        "passing":       _sum_passing(pro),
+        # Per-league career buckets
+        **league_careers,
+        # Awards & honors
+        "awards":        awards_list,
+        "source":        "footballdb",
+        "updatedAt":     time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     })
 
 

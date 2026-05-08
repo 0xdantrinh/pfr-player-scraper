@@ -207,15 +207,21 @@ def _parse_stats_table(table, cols: list[str]) -> list[dict]:
         cells = [c.get_text(strip=True) for c in tr.find_all(["td", "th"])]
         if not cells:
             continue
+
+        # Some footballdb table layouts prepend an empty first cell (row
+        # selector / checkbox column). Detect and strip it so the year field
+        # always lands at cells[0] for the rest of the logic.
+        if cells[0] == "" and len(cells) > 1 and cells[1].isdigit():
+            cells = cells[1:]
+
         first = cells[0]
         # Skip header-band row (first cell is blank, last cell is category like 'Passing')
         if first == "" or first.lower() in ("year",):
             continue
-        # Skip TOTALS rows — second cell holds the league, third is "TOTALS"
+        # Skip TOTALS rows — third cell is "TOTALS"
         if "TOTAL" in (cells[2] if len(cells) > 2 else "").upper():
             continue
-        if first.upper() == "FBS" or first.upper() == "NFL" or first.upper() == "XFL" or first.upper() == "UFL":
-            # footer TOTALS row variant — first cell is league
+        if first.upper() in ("FBS", "NFL", "XFL", "UFL", "AAF", "USFL", "JUCO", "D2"):
             continue
         # Year must look like a 4-digit number for a real season row
         if not (first.isdigit() and 1980 <= int(first) <= 2100):
@@ -249,6 +255,56 @@ def _find_stats_table(soup: BeautifulSoup, category_label: str) -> object | None
         if label_lower in text:
             return t
     return None
+
+
+# ── Awards block ─────────────────────────────────────────────────────────────
+
+def _extract_awards(soup: BeautifulSoup) -> list[dict]:
+    """Parse the 'Awards & Honors' section from div#divPlayerAwards.
+
+    footballdb structure:
+        <div id="divPlayerAwards">
+          <h2>Player Awards & Honors</h2>
+          <b>XFL Championship Game MVP</b> - <a>XFL Championship Game</a><br/>
+          <b>UFL Offensive Player of the Week</b> - 2025 Week 10
+        </div>
+
+    Returns a list like:
+        [{"award": "XFL Championship Game MVP", "year": 2023, "detail": "XFL Championship Game"},
+         {"award": "UFL Offensive Player of the Week", "year": 2025, "detail": "Week 10"}]
+    """
+    awards: list[dict] = []
+    container = soup.find("div", id="divPlayerAwards")
+    if not container:
+        return awards
+
+    for b_tag in container.find_all("b"):
+        award_name = b_tag.get_text(strip=True)
+        if not award_name or "award" in award_name.lower():
+            continue
+
+        # The detail text follows the <b> tag as a text node or via a link
+        detail_parts = []
+        for sibling in b_tag.next_siblings:
+            if sibling.name == "b":
+                break   # next award entry
+            if sibling.name == "br":
+                break
+            text = sibling.get_text(" ", strip=True) if hasattr(sibling, "get_text") else str(sibling).strip()
+            text = text.lstrip("- ").strip()
+            if text:
+                detail_parts.append(text)
+
+        detail = " ".join(detail_parts).strip(" -")
+        entry: dict = {"award": award_name}
+        if detail:
+            entry["detail"] = detail
+        m = re.search(r"\b(20\d{2}|19\d{2})\b", detail)
+        if m:
+            entry["year"] = int(m.group(1))
+        awards.append(entry)
+
+    return awards
 
 
 # ── Top-level parse ───────────────────────────────────────────────────────────
@@ -287,7 +343,8 @@ def parse_page(html: str, url: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
 
     fdb_id = _extract_footballdb_id(url)
-    info = _extract_player_info(soup)
+    info   = _extract_player_info(soup)
+    awards = _extract_awards(soup)
 
     passing_tbl = _find_stats_table(soup, "Passing")
     rushing_tbl = _find_stats_table(soup, "Rushing")
@@ -297,6 +354,7 @@ def parse_page(html: str, url: str) -> dict:
         "source_url":    url,
         "scraped_at":    datetime.utcnow().isoformat(timespec="seconds") + "Z",
         "player_info":   info,
+        "awards":        awards,
         "stats": {
             "passing": _parse_stats_table(passing_tbl, PASSING_COLS) if passing_tbl else [],
             "rushing": _parse_stats_table(rushing_tbl, RUSHING_COLS) if rushing_tbl else [],

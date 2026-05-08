@@ -13,7 +13,6 @@ SQS_URL = os.environ.get("SQS_QUEUE_URL")
 S3_BUCKET = os.environ.get("S3_BUCKET")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
-# Validate required environment variables
 if not SQS_URL:
     raise ValueError("SQS_QUEUE_URL environment variable is required")
 if not S3_BUCKET:
@@ -22,28 +21,44 @@ if not S3_BUCKET:
 sqs = boto3.client("sqs", region_name=AWS_REGION)
 s3 = boto3.client("s3", region_name=AWS_REGION)
 
+
+def _name_matches_pfr_id(name: str, pfr_id: str) -> bool:
+    """Check that a scraped player name is consistent with the pfrId encoding.
+
+    PFR encodes: first-4-of-last + first-2-of-first + 2-digit-suffix.
+    e.g. HerbJu00 → last starts "Herb", first starts "Ju".
+    Returns True if both fragments appear in the name, or if the format
+    is unrecognizable (fail open so we don't block legacy messages).
+    """
+    if not pfr_id or not name or len(pfr_id) < 6:
+        return True
+    last_frag  = pfr_id[:4].lower()
+    first_frag = pfr_id[4:6].lower()
+    name_lower = name.lower().replace("-", "").replace("'", "").replace(".", "")
+    parts      = name_lower.split()
+    last_ok    = any(p.startswith(last_frag) for p in parts)
+    first_ok   = any(p.startswith(first_frag) for p in parts)
+    return last_ok and first_ok
+
+
 def process_message(msg):
-    # Message body may be a plain URL string (legacy enqueue_players.py) or a
-    # JSON object produced by the enqueue-team Lambda:
-    #   { "url": "...", "pfrId"?: "...", "cfbSlug"?: "...", "playerName"?: "...",
-    #     "teamAbbr"?: "HOU", "seasonYear"?: 2026, "league"?: "ufl" }
+    # Message body may be a plain URL string (legacy) or a JSON object:
+    #   { "url": "...", "pfrId"?: "...", "teamAbbr"?: "HOU",
+    #     "seasonYear"?: 2026, "league"?: "ufl" }
     raw_body = msg["Body"]
     try:
         msg_meta = json.loads(raw_body)
         if isinstance(msg_meta, dict) and "url" in msg_meta:
             url = msg_meta["url"]
         else:
-            # JSON but not our format (just a bare string wrapped in JSON)
             url = str(msg_meta)
             msg_meta = {}
     except (json.JSONDecodeError, TypeError):
-        # Plain URL string — legacy format
         url = raw_body
         msg_meta = {}
 
-    # Extract optional metadata that was embedded by enqueue-team
-    pfr_player_id = msg_meta.get("pfrId")    # links CFB scrape to existing PFR record
-    team_abbr     = msg_meta.get("teamAbbr") # e.g. "HOU" for UFL team
+    pfr_player_id = msg_meta.get("pfrId")
+    team_abbr     = msg_meta.get("teamAbbr")
     season_year   = msg_meta.get("seasonYear")
     league        = msg_meta.get("league")
     player_name   = msg_meta.get("playerName")
@@ -55,16 +70,41 @@ def process_message(msg):
     if "/cfb/players/" in url:
         data = parse_cfb_page(html, url)
         slug = data.get("player_id")
-        key = f"college/{slug}.json"
-    else:
-        data = parse_page(html, url)
-        player_id = data.get("player_id")
-        key = f"players/{player_id}.json"
+        key  = f"college/{slug}.json"
 
-    # Embed SQS metadata into the stored JSON so transform-pfr-data Lambda can
-    # use it to set the correct DynamoDB team GSI key for UFL players.
-    # These fields are only present when enqueue-team sent them — they're absent
-    # for legacy plain-URL messages.
+        # Guard: wrong CFB disambiguation returns a player with the same name
+        # but a different position (e.g. DB named "Justin Fields" vs the QB).
+        # Skip upload if the name doesn't match the pfrId or there are no
+        # passing stats (which every QB page should have).
+        if pfr_player_id:
+            scraped_name  = data.get("player_info", {}).get("name", "")
+            passing_rows  = data.get("stats", {}).get("passing_standard", [])
+            if not _name_matches_pfr_id(scraped_name, pfr_player_id):
+                logging.warning(
+                    f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
+                )
+                return
+            if not passing_rows:
+                logging.warning(
+                    f"SKIP {key}: no passing stats — wrong CFB disambiguation for {pfr_player_id} (try a different -N suffix)"
+                )
+                return
+
+    else:
+        data      = parse_page(html, url)
+        player_id = data.get("player_id")
+        key       = f"players/{player_id}.json"
+
+        # Guard: Cloudflare sometimes returns a cached page for a different player.
+        # Skip upload if the scraped name doesn't match the pfrId.
+        if pfr_player_id:
+            scraped_name = data.get("player_info", {}).get("name", "")
+            if scraped_name and not _name_matches_pfr_id(scraped_name, pfr_player_id):
+                logging.warning(
+                    f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id} — wrong page, will retry"
+                )
+                return
+
     if pfr_player_id:
         data["pfr_player_id"] = pfr_player_id
     if team_abbr:
@@ -94,7 +134,7 @@ def loop():
         )
 
         msgs = resp.get("Messages", [])
-        
+
         if msgs:
             logging.info(f"Received {len(msgs)} message(s)")
         else:
@@ -112,7 +152,7 @@ def loop():
             except Exception as e:
                 logging.error(f"Error processing message: {e}", exc_info=True)
 
-        time.sleep(random.uniform(0.5,2.0))
+        time.sleep(random.uniform(0.5, 2.0))
 
 
 if __name__ == "__main__":
