@@ -85,10 +85,19 @@ def _strip_nulls(d: dict) -> dict:
 
 # ── Transformations ───────────────────────────────────────────────────────────
 
-def build_profile_item(player_id: str, scraped: dict) -> dict:
-    """Build the PROFILE DDB item from scraped JSON."""
+def build_profile_item(player_id: str, scraped: dict,
+                         team_abbr: str | None = None,
+                         season_year: int | None = None) -> dict:
+    """Build the PROFILE DDB item from scraped JSON.
+
+    When team_abbr is given (e.g. "STL"), set the GSI keys so getTeamPlayers()
+    can find this player. footballdb returns full team names like "St. Louis
+    BattleHawks" — we can't reliably map those to aliases, so we require the
+    caller to pass the alias explicitly when they want roster discoverability.
+    """
     info = scraped.get("player_info", {}) or {}
-    return _strip_nulls({
+    year = season_year or int(time.strftime("%Y", time.gmtime()))
+    item = {
         "PK":             f"PLAYER#{player_id}",
         "SK":             "PROFILE",
         "entityType":     "PROFILE",
@@ -100,13 +109,19 @@ def build_profile_item(player_id: str, scraped: dict) -> dict:
         "weightLbs":      info.get("weight_lb"),
         "birthdate":      info.get("birthdate"),
         "college":        info.get("college"),
-        "currentTeamAbbr": info.get("current_team"),  # full team name from footballdb
+        "currentTeamAbbr": team_abbr or info.get("current_team"),
+        "currentTeamFull": info.get("current_team") if team_abbr else None,
         "currentLeague":  info.get("current_league"),
+        "currentSeason":  year if team_abbr else None,
         "jerseyNumber":   info.get("jersey"),
         "source":         "footballdb",
         "sourceUrl":      scraped.get("source_url"),
         "updatedAt":      time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    })
+    }
+    if team_abbr:
+        item["GSI1PK"] = f"TEAM#{team_abbr}#S#{year}"
+        item["GSI1SK"] = f"PLAYER#{player_id}"
+    return _strip_nulls(item)
 
 
 def _passing_dict(row: dict) -> dict:
@@ -333,7 +348,9 @@ def build_career_item(player_id: str, scraped: dict) -> dict:
 
 def import_player(url: str, table_name: str = DEFAULT_TABLE,
                    scraper_path: str = DEFAULT_SCRAPER, dry_run: bool = False,
-                   pfr_id_override: str | None = None) -> dict:
+                   pfr_id_override: str | None = None,
+                   team_abbr: str | None = None,
+                   season_year: int | None = None) -> dict:
     """Scrape one footballdb player URL and (optionally) write to DDB.
 
     When pfr_id_override is provided, items are written under PLAYER#{pfrId}
@@ -353,7 +370,7 @@ def import_player(url: str, table_name: str = DEFAULT_TABLE,
         raise ValueError("Could not extract footballdb_id from URL")
     player_id = pfr_id_override if pfr_id_override else f"fdb:{fdb_id}"
 
-    profile = build_profile_item(player_id, scraped)
+    profile = build_profile_item(player_id, scraped, team_abbr=team_abbr, season_year=season_year)
     seasons = build_season_items(player_id, scraped)
     career  = build_career_item(player_id, scraped)
 
@@ -454,6 +471,10 @@ def main() -> None:
     p.add_argument("--scraper-path", default=DEFAULT_SCRAPER)
     p.add_argument("--pfr-id", default=None,
                    help="Optional pfrId to overlay (single-player mode only). For bulk, set pfrId per-entry in the input file.")
+    p.add_argument("--team-abbr", default=None,
+                   help="Current team alias (e.g. STL) — required for the player to show up in getTeamPlayers() roster lookups. footballdb only gives full team names which can't be reliably mapped to aliases.")
+    p.add_argument("--season-year", type=int, default=None,
+                   help="Current season year for GSI key (defaults to current year).")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--sleep", type=float, default=1.5, help="Seconds between requests in bulk mode (default 1.5)")
     args = p.parse_args()
@@ -461,7 +482,10 @@ def main() -> None:
     if args.input_file:
         import_from_file(args.input_file, args.table, args.scraper_path, args.dry_run, sleep_between=args.sleep)
     else:
-        import_player(args.url, args.table, args.scraper_path, args.dry_run, pfr_id_override=args.pfr_id)
+        import_player(args.url, args.table, args.scraper_path, args.dry_run,
+                      pfr_id_override=args.pfr_id,
+                      team_abbr=args.team_abbr,
+                      season_year=args.season_year)
 
 
 if __name__ == "__main__":
