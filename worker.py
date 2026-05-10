@@ -4,7 +4,7 @@ import time
 import logging
 import random
 import boto3
-from scraper import fetch_page, parse_page
+from scraper import fetch_page, parse_page, PageNotFoundError
 from cfb_scraper import parse_page as parse_cfb_page
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -75,20 +75,32 @@ def process_message(msg):
         # Guard: wrong CFB disambiguation returns a player with the same name
         # but a different position (e.g. DB named "Justin Fields" vs the QB).
         # Skip upload if the name doesn't match the pfrId or there are no
-        # passing stats (which every QB page should have).
+        # relevant stats. For QBs we require passing rows; for WRs/TEs/RBs we
+        # accept receiving rows; for other positions any non-empty stats table.
         if pfr_player_id:
-            scraped_name  = data.get("player_info", {}).get("name", "")
-            passing_rows  = data.get("stats", {}).get("passing_standard", [])
+            scraped_name   = data.get("player_info", {}).get("name", "")
+            scraped_pos    = (data.get("player_info", {}).get("position") or "").upper()
+            passing_rows   = data.get("stats", {}).get("passing_standard", [])
+            receiving_rows = data.get("stats", {}).get("receiving_standard", [])
             if not _name_matches_pfr_id(scraped_name, pfr_player_id):
                 logging.warning(
                     f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
                 )
                 return
-            if not passing_rows:
-                logging.warning(
-                    f"SKIP {key}: no passing stats — wrong CFB disambiguation for {pfr_player_id} (try a different -N suffix)"
-                )
-                return
+            is_skill_receiver = any(p in scraped_pos for p in ("WR", "TE", "RB", "WIDE", "TIGHT", "RUNNING"))
+            if is_skill_receiver:
+                if not receiving_rows:
+                    logging.warning(
+                        f"SKIP {key}: no receiving stats for {scraped_pos} — wrong CFB disambiguation for {pfr_player_id}"
+                    )
+                    return
+            else:
+                # QB / default: require passing stats
+                if not passing_rows:
+                    logging.warning(
+                        f"SKIP {key}: no passing stats — wrong CFB disambiguation for {pfr_player_id} (try a different -N suffix)"
+                    )
+                    return
 
     else:
         data      = parse_page(html, url)
@@ -149,6 +161,9 @@ def loop():
                     ReceiptHandle=m["ReceiptHandle"]
                 )
 
+            except PageNotFoundError as e:
+                # 404 pages are expected for wrong disambiguation suffixes — discard quietly
+                logging.debug(f"404 skip: {e}")
             except Exception as e:
                 logging.error(f"Error processing message: {e}", exc_info=True)
 

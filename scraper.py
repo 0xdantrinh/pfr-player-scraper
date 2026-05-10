@@ -40,7 +40,18 @@ def fetch_page(url):
     r.raise_for_status()
 
     data = r.json()
+    page_status = data.get("solution", {}).get("status", 200)
     html = data["solution"]["response"]
+
+    # Bail early on 404/410 — no point parsing or retrying a missing page.
+    # Raise a specific exception so the worker can discard without logging a full traceback.
+    if page_status in (404, 410):
+        raise PageNotFoundError(f"Page not found ({page_status}): {url}")
+
+    # Sports-reference sometimes serves 404 content with HTTP 200.
+    # Detect by the known error heading on their 404 page.
+    if "Page Not Found" in html and "404 error" in html:
+        raise PageNotFoundError(f"Page not found (200 w/ 404 body): {url}")
 
     # Detect Cloudflare challenge page
     if "cf-chl" in html.lower() or "just a moment" in html.lower():
@@ -52,9 +63,17 @@ def fetch_page(url):
         r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,600))
         r.raise_for_status()
         data = r.json()
+        page_status = data.get("solution", {}).get("status", 200)
         html = data["solution"]["response"]
+        if page_status in (404, 410):
+            raise PageNotFoundError(f"Page not found ({page_status}): {url}")
 
     return html
+
+
+class PageNotFoundError(Exception):
+    """Raised when the target page returns 404/410. Worker should discard silently."""
+    pass
 
 
 def parse_height(text):
