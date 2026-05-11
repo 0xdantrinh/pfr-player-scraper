@@ -64,13 +64,14 @@ def participant_slug(name: str) -> str:
 
 def fetch_rendered_html(url: str, league: str = "default") -> str:
     log.info("Fetching via FlareSolverr: %s", url)
+    # All DK Network pages share the same Cloudflare domain — one session handles all leagues
     r = requests.post(FLARESOLVERR_URL, json={
         "cmd": "request.get",
         "url": url,
-        "session": f"dk-splits-{league}",
+        "session": "dk-splits",
         "session_ttl_minutes": 60,
         "maxTimeout": 120000,
-    }, timeout=(10, 130))
+    }, timeout=(10, 150))
     # FlareSolverr returns 500 with JSON on challenge failure — read body before raising
     try:
         data = r.json()
@@ -185,7 +186,7 @@ def parse_game_date(game_dt: str | None) -> str:
 
 def save_game(game: dict, league: str, dry_run: bool) -> str:
     date_str = parse_game_date(game["game_datetime"])
-    sep      = "vs" if game["separator"].lower().startswith("v") else "@"
+    sep      = "-vs-" if game["separator"].lower().startswith("v") else "@"
     filename = f"{game['participant1_slug']}{sep}{game['participant2_slug']}.json"
     out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
     filepath = os.path.join(out_dir, filename)

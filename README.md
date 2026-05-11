@@ -72,11 +72,21 @@ worker.py
 ```
 pfr-player-scraper
 │
-├── scraper.py
-├── worker.py
-├── enqueue_players.py
+├── scraper.py                  ← PFR + CFB page fetcher/parser (FlareSolverr)
+├── worker.py                   ← SQS consumer: fetches pages, uploads JSON to S3
+├── cfb_scraper.py              ← College Football Reference scraper (passing + receiving stats)
+├── capture_betting_splits.py   ← DraftKings Network betting splits scraper (run locally)
+├── enqueue_players.py          ← Helper: batch-enqueue player URLs to SQS
 ├── requirements.txt
 ├── Dockerfile
+│
+├── splits/                     ← Local JSON snapshots from capture_betting_splits.py
+│   ├── ufl/
+│   │   └── YYYY-MM-DD/
+│   │       └── {away}@{home}.json
+│   └── ufc/
+│       └── YYYY-MM-DD/
+│           └── {fighter1}vs{fighter2}.json
 │
 ├── aws
 │   └── ecs
@@ -547,4 +557,69 @@ docker run -d \
 ```
 
 This disables images, fonts, and other heavy resources inside the browser which significantly speeds up navigation while still allowing Cloudflare challenges to execute.
+
+---
+
+# DraftKings Betting Splits Capture
+
+`capture_betting_splits.py` scrapes the [DK Network betting splits page](https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/) via FlareSolverr and saves a local JSON snapshot per game. Run it manually or via cron whenever you want fresh splits.
+
+## Supported Sports
+
+| League | Event Group | Notes |
+|--------|-------------|-------|
+| `ufl`  | 212333      | UFL football |
+| `ufc`  | 9034        | UFC fights |
+| `nfl`  | 88808       | NFL football |
+| `nba`  | 42648       | NBA basketball |
+| `mlb`  | 84240       | MLB baseball |
+
+Find additional event group IDs in the `tb_eg=` URL parameter on the DK Network page.
+
+## Usage
+
+```bash
+# Capture all upcoming UFL games
+python capture_betting_splits.py --league ufl
+
+# Capture UFC card
+python capture_betting_splits.py --league ufc
+
+# Dry run (print without saving)
+python capture_betting_splits.py --league ufl --dry-run
+```
+
+## Output
+
+Files saved to `splits/{league}/{YYYY-MM-DD}/{participant1}vs{participant2}.json`:
+
+```
+splits/ufl/2026-05-15/ORL@DAL.json
+splits/ufc/2026-05-16/tokkos-tucovserslan-ivan.json
+```
+
+Each JSON includes:
+- `participant1/2_handle_pct` — % of money wagered on each side
+- `participant1/2_bets_pct` — % of tickets (public) on each side
+- `p1/p2_sharp_delta` — handle% minus bets% (positive = sharp money on that side)
+- `participant1/2_odds`, `game_datetime`, `captured_at`
+
+## Example sharp signal
+
+```json
+{
+  "matchup": "Tuco Tokkos vs Ivan Erslan",
+  "participant1_handle_pct": 79,
+  "participant1_bets_pct": 43,
+  "p1_sharp_delta": 36
+}
+```
+→ 79% of money on Tokkos but only 43% of tickets — sharp money heavily on Tokkos despite public split.
+
+## Recommended cron
+
+```cron
+# Run at 5pm and 7pm every Saturday and Sunday (before UFL/UFC kickoffs)
+0 17,19 * * 6,7 cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league ufl
+```
 

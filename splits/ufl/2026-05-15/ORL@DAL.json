@@ -1,0 +1,20 @@
+{
+  "matchup": "Orlando Storm @ Dallas Renegades",
+  "separator": "@",
+  "participant1": "Orlando Storm",
+  "participant2": "Dallas Renegades",
+  "participant1_slug": "ORL",
+  "participant2_slug": "DAL",
+  "game_datetime": "5/15, 08:00PM",
+  "participant1_odds": "+102",
+  "participant2_odds": "-122",
+  "participant1_handle_pct": 64,
+  "participant2_handle_pct": 36,
+  "participant1_bets_pct": 33,
+  "participant2_bets_pct": 67,
+  "p2_sharp_delta": -31,
+  "p1_sharp_delta": 31,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T14:49:18.954916+00:00"
+}
