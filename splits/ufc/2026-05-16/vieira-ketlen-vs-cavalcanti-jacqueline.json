@@ -1,0 +1,20 @@
+{
+  "matchup": "Ketlen Vieira vs Jacqueline Cavalcanti",
+  "separator": "vs",
+  "participant1": "Ketlen Vieira",
+  "participant2": "Jacqueline Cavalcanti",
+  "participant1_slug": "vieira-ketlen",
+  "participant2_slug": "cavalcanti-jacqueline",
+  "game_datetime": "5/16, 07:00PM",
+  "participant1_odds": "+136",
+  "participant2_odds": "-162",
+  "participant1_handle_pct": 35,
+  "participant2_handle_pct": 65,
+  "participant1_bets_pct": 18,
+  "participant2_bets_pct": 82,
+  "p2_sharp_delta": -17,
+  "p1_sharp_delta": 17,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T15:27:55.745021+00:00"
+}

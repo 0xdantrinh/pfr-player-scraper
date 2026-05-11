@@ -1,0 +1,20 @@
+{
+  "matchup": "Daniel Barez vs Luis Gurule",
+  "separator": "vs",
+  "participant1": "Daniel Barez",
+  "participant2": "Luis Gurule",
+  "participant1_slug": "barez-daniel",
+  "participant2_slug": "gurule-luis",
+  "game_datetime": "5/16, 05:45PM",
+  "participant1_odds": "-110",
+  "participant2_odds": "-110",
+  "participant1_handle_pct": 30,
+  "participant2_handle_pct": 70,
+  "participant1_bets_pct": 47,
+  "participant2_bets_pct": 53,
+  "p2_sharp_delta": 17,
+  "p1_sharp_delta": -17,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T15:27:55.744142+00:00"
+}

@@ -1,0 +1,20 @@
+{
+  "matchup": "Cody Brundage vs Andre Petroski",
+  "separator": "vs",
+  "participant1": "Cody Brundage",
+  "participant2": "Andre Petroski",
+  "participant1_slug": "brundage-cody",
+  "participant2_slug": "petroski-andre",
+  "game_datetime": "5/16, 06:45PM",
+  "participant1_odds": "+180",
+  "participant2_odds": "-218",
+  "participant1_handle_pct": 17,
+  "participant2_handle_pct": 83,
+  "participant1_bets_pct": 32,
+  "participant2_bets_pct": 68,
+  "p2_sharp_delta": 15,
+  "p1_sharp_delta": -15,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T15:27:55.744760+00:00"
+}

@@ -1,0 +1,20 @@
+{
+  "matchup": "Doo Ho Choi vs Daniel Santos",
+  "separator": "vs",
+  "participant1": "Doo Ho Choi",
+  "participant2": "Daniel Santos",
+  "participant1_slug": "choi-ho-doo",
+  "participant2_slug": "santos-daniel",
+  "game_datetime": "5/16, 09:45PM",
+  "participant1_odds": "+120",
+  "participant2_odds": "-142",
+  "participant1_handle_pct": 15,
+  "participant2_handle_pct": 85,
+  "participant1_bets_pct": 34,
+  "participant2_bets_pct": 66,
+  "p2_sharp_delta": 19,
+  "p1_sharp_delta": -19,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T15:27:55.746116+00:00"
+}

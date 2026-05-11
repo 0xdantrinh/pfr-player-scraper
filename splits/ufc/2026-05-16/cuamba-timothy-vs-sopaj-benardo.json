@@ -1,0 +1,20 @@
+{
+  "matchup": "Timothy Cuamba vs Benardo Sopaj",
+  "separator": "vs",
+  "participant1": "Timothy Cuamba",
+  "participant2": "Benardo Sopaj",
+  "participant1_slug": "cuamba-timothy",
+  "participant2_slug": "sopaj-benardo",
+  "game_datetime": "5/16, 08:15PM",
+  "participant1_odds": "+124",
+  "participant2_odds": "-148",
+  "participant1_handle_pct": 6,
+  "participant2_handle_pct": 94,
+  "participant1_bets_pct": 36,
+  "participant2_bets_pct": 64,
+  "p2_sharp_delta": 30,
+  "p1_sharp_delta": -30,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T15:27:55.745541+00:00"
+}

@@ -1,0 +1,20 @@
+{
+  "matchup": "Modestas Bukauskas vs Rodolfo Bellato",
+  "separator": "vs",
+  "participant1": "Modestas Bukauskas",
+  "participant2": "Rodolfo Bellato",
+  "participant1_slug": "bukauskas-modestas",
+  "participant2_slug": "bellato-rodolfo",
+  "game_datetime": "5/16, 08:45PM",
+  "participant1_odds": "-130",
+  "participant2_odds": "+110",
+  "participant1_handle_pct": 75,
+  "participant2_handle_pct": 25,
+  "participant1_bets_pct": 66,
+  "participant2_bets_pct": 34,
+  "p2_sharp_delta": -9,
+  "p1_sharp_delta": 9,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T15:27:55.745875+00:00"
+}
