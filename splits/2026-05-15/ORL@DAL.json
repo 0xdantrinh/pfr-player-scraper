@@ -1,0 +1,19 @@
+{
+  "matchup": "Orlando Storm @ Dallas Renegades",
+  "away_team": "Orlando Storm",
+  "home_team": "Dallas Renegades",
+  "away_alias": "ORL",
+  "home_alias": "DAL",
+  "game_datetime": "5/15, 08:00PM",
+  "away_odds": "+102",
+  "home_odds": "-122",
+  "away_handle_pct": 66,
+  "home_handle_pct": 34,
+  "away_bets_pct": 36,
+  "home_bets_pct": 64,
+  "home_sharp_delta": -30,
+  "away_sharp_delta": 30,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T05:18:49.298772+00:00"
+}

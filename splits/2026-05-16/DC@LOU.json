@@ -1,0 +1,19 @@
+{
+  "matchup": "D.C. Defenders @ Louisville Kings",
+  "away_team": "D.C. Defenders",
+  "home_team": "Louisville Kings",
+  "away_alias": "DC",
+  "home_alias": "LOU",
+  "game_datetime": "5/16, 12:00PM",
+  "away_odds": "-258",
+  "home_odds": "+210",
+  "away_handle_pct": 91,
+  "home_handle_pct": 9,
+  "away_bets_pct": 92,
+  "home_bets_pct": 8,
+  "home_sharp_delta": 1,
+  "away_sharp_delta": -1,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T05:18:49.299747+00:00"
+}

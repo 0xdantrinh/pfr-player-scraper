@@ -1,22 +1,13 @@
 """Capture DraftKings betting splits (% Handle + % Bets) for UFL games.
 
-Scrapes the DK Network page via FlareSolverr and saves a pre-kickoff
-snapshot to a local JSON file. Run on the same machine as FlareSolverr.
+Scrapes the DK Network page via FlareSolverr and saves all current games
+to local JSON files. Just run it whenever you want a fresh snapshot.
 
-Output: splits/{YYYY-MM-DD}/{away}@{home}.json
+Output: splits/{YYYY-MM-DD}/{away}@{home}.json  (overwrites on re-run)
 
 Usage:
-    # Daemon — polls every 30 min, auto-captures 30-90 min before kickoff
-    python capture_betting_splits.py --league ufl
-
-    # One-shot
-    python capture_betting_splits.py --league ufl --once
-
-    # Force-capture ALL upcoming games right now (ignore time window)
-    python capture_betting_splits.py --league ufl --once --force
-
-    # Dry-run — parse and print without saving files
-    python capture_betting_splits.py --league ufl --once --dry-run
+    python capture_betting_splits.py --league ufl           # save all games
+    python capture_betting_splits.py --league ufl --dry-run # print only
 """
 
 import argparse
@@ -25,9 +16,10 @@ import logging
 import os
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import requests
+from bs4 import BeautifulSoup
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s | %(message)s")
 log = logging.getLogger(__name__)
@@ -36,13 +28,15 @@ FLARESOLVERR_URL = "http://localhost:8191/v1"
 OUTPUT_DIR       = "splits"
 
 EVENT_GROUPS = {
-    "ufl": "212333",
+    "ufl":  "212333",
+    "ufc":  "9034",
+    "nfl":  "88808",
+    "nba":  "42648",
+    "mlb":  "84240",
+    # Add more as needed — find the tb_eg value from the URL when on that sport's page
 }
 
-CAPTURE_MIN      = 30   # minutes before kickoff
-CAPTURE_MAX      = 90
-POLL_INTERVAL    = 30 * 60  # daemon sleep (seconds)
-
+# UFL team abbreviations — other sports use slugified participant names
 TEAM_ALIAS = {
     "Dallas Renegades":      "DAL",
     "Orlando Storm":         "ORL",
@@ -56,212 +50,208 @@ TEAM_ALIAS = {
     "Arlington Renegades":   "DAL",
 }
 
-def team_alias(name: str) -> str:
-    return TEAM_ALIAS.get(name.strip(), name.strip()[:3].upper())
+def participant_slug(name: str) -> str:
+    """Short identifier for a team or fighter — alias if known, else slug."""
+    clean = name.strip()
+    if clean in TEAM_ALIAS:
+        return TEAM_ALIAS[clean]
+    # For fighters/individuals: "Daniel Barez" → "barez-daniel"
+    parts = clean.lower().split()
+    return "-".join(reversed(parts)) if len(parts) > 1 else clean.lower()
 
 
 # ── FlareSolverr ──────────────────────────────────────────────────────────────
 
-def fetch_rendered_html(url: str) -> str:
+def fetch_rendered_html(url: str, league: str = "default") -> str:
     log.info("Fetching via FlareSolverr: %s", url)
     r = requests.post(FLARESOLVERR_URL, json={
         "cmd": "request.get",
         "url": url,
-        "session": "dk-splits",
+        "session": f"dk-splits-{league}",
         "session_ttl_minutes": 60,
         "maxTimeout": 120000,
     }, timeout=(10, 130))
-    r.raise_for_status()
-    data = r.json()
+    # FlareSolverr returns 500 with JSON on challenge failure — read body before raising
+    try:
+        data = r.json()
+    except Exception:
+        r.raise_for_status()
+        raise
     if data.get("status") != "ok":
         raise RuntimeError(f"FlareSolverr error: {data.get('message')}")
-    log.info("Got %d bytes (page HTTP %s)", len(data["solution"]["response"]), data["solution"].get("status"))
-    return data["solution"]["response"]
+    html = data["solution"]["response"]
+    log.info("Got %d bytes (HTTP %s)", len(html), data["solution"].get("status"))
+    return html
 
 
-# ── HTML parser ───────────────────────────────────────────────────────────────
+# ── HTML parser (BeautifulSoup — robust against whitespace) ───────────────────
 
 def parse_splits_html(html: str) -> list[dict]:
-    games  = []
-    chunks = re.split(r'(?=<div[^>]*class="[^"]*\btb-se\b)', html)
+    soup  = BeautifulSoup(html, "lxml")
+    games = []
 
-    for chunk in chunks:
-        if "tb-sodd" not in chunk:
+    for block in soup.find_all("div", class_="tb-se"):
+        # Matchup title — supports both "Away @ Home" (teams) and "Fighter1 vs Fighter2"
+        title_el = block.find("h5") or block.find(class_="tb-se-title")
+        if not title_el:
             continue
+        title_text = title_el.get_text(" ", strip=True)
 
-        matchup_m = re.search(r'([A-Za-z.\s]+)\s+@\s+([A-Za-z.\s]+?)(?:\s+opens in a new tab|\s+<)', chunk)
-        if not matchup_m:
+        # Try "@ " separator (team sports) then "vs" (individual sports like UFC)
+        sep_m = re.search(r'(.+?)\s+(@|vs\.?)\s+(.+?)(?:\s+opens|\s*$)', title_text, re.IGNORECASE)
+        if not sep_m:
             continue
-        away_name = matchup_m.group(1).strip()
-        home_name = matchup_m.group(2).strip()
+        p1_name   = sep_m.group(1).strip()
+        separator = sep_m.group(2).strip()   # "@" or "vs"
+        p2_name   = sep_m.group(3).strip()
+        is_team_sport = separator == "@"
 
-        dt_m       = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', chunk)
+        # Date/time
+        block_text = block.get_text(" ", strip=True)
+        dt_m       = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', block_text)
         game_dt    = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
 
-        team_rows = []
-        for sodd in re.split(r'(?=<div[^>]*class="[^"]*\btb-sodd\b)', chunk):
-            if "tb-sodd" not in sodd:
-                continue
-            text  = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', sodd)).strip()
+        # Each tb-sodd div = one participant row
+        rows = []
+        for sodd in block.find_all("div", class_="tb-sodd"):
+            text   = sodd.get_text(" ", strip=True)
             odds_m = re.search(r'([+−\-]\d{2,4})', text)
             if not odds_m:
                 continue
-            team_name = text[:odds_m.start()].replace("opens in a new tab", "").strip()
-            odds      = odds_m.group(1).replace("−", "-").replace("–", "-")
-            pcts      = [int(m.group(1)) for m in re.finditer(r'(\d{1,3})%', text)]
-            team_rows.append({
-                "team":       team_name,
-                "alias":      team_alias(team_name),
+            name  = text[:odds_m.start()].replace("opens in a new tab", "").strip()
+            odds  = odds_m.group(1).replace("−", "-").replace("–", "-")
+            pcts  = [int(m.group(1)) for m in re.finditer(r'(\d{1,3})%', text)]
+            rows.append({
+                "name":       name,
+                "slug":       participant_slug(name),
                 "odds":       odds,
                 "handle_pct": pcts[0] if pcts else None,
                 "bets_pct":   pcts[1] if len(pcts) > 1 else None,
             })
 
-        if len(team_rows) < 2:
+        if len(rows) < 2:
             continue
 
-        home_row = next((r for r in team_rows if home_name.split()[0].lower() in r["team"].lower()), team_rows[1])
-        away_row = next((r for r in team_rows if r is not home_row), team_rows[0])
+        # For team sports: p1=away, p2=home. For "vs" sports: p1/p2 order as listed.
+        if is_team_sport:
+            p2_row = next((r for r in rows if p2_name.split()[0].lower() in r["name"].lower()), rows[1])
+            p1_row = next((r for r in rows if r is not p2_row), rows[0])
+        else:
+            p1_row, p2_row = rows[0], rows[1]
 
+        sharp_delta = (
+            p2_row["handle_pct"] - p2_row["bets_pct"]
+            if p2_row["handle_pct"] is not None and p2_row["bets_pct"] is not None
+            else None
+        )
+
+        matchup_str = f"{p1_name} @ {p2_name}" if is_team_sport else f"{p1_name} vs {p2_name}"
         games.append({
-            "matchup":         f"{away_name} @ {home_name}",
-            "away_team":       away_name,  "home_team":      home_name,
-            "away_alias":      away_row["alias"], "home_alias": home_row["alias"],
-            "game_datetime":   game_dt,
-            "away_odds":       away_row["odds"],  "home_odds":  home_row["odds"],
-            "away_handle_pct": away_row["handle_pct"],
-            "home_handle_pct": home_row["handle_pct"],
-            "away_bets_pct":   away_row["bets_pct"],
-            "home_bets_pct":   home_row["bets_pct"],
+            "matchup":          matchup_str,
+            "separator":        separator,       # "@" or "vs"
+            "participant1":     p1_name,
+            "participant2":     p2_name,
+            "participant1_slug": p1_row["slug"],
+            "participant2_slug": p2_row["slug"],
+            "game_datetime":    game_dt,
+            "participant1_odds":       p1_row["odds"],
+            "participant2_odds":       p2_row["odds"],
+            "participant1_handle_pct": p1_row["handle_pct"],
+            "participant2_handle_pct": p2_row["handle_pct"],
+            "participant1_bets_pct":   p1_row["bets_pct"],
+            "participant2_bets_pct":   p2_row["bets_pct"],
+            # Sharp delta on participant2 (home team or fighter2)
+            "p2_sharp_delta": sharp_delta,
+            "p1_sharp_delta": -sharp_delta if sharp_delta is not None else None,
         })
 
     return games
 
 
-# ── Timing ────────────────────────────────────────────────────────────────────
-
-def parse_kickoff(game_dt: str | None) -> datetime | None:
-    if not game_dt:
-        return None
-    m = re.match(r'(\d+)/(\d+),?\s+(\d+):(\d+)(AM|PM)', game_dt)
-    if not m:
-        return None
-    month, day, hr, mn, ampm = int(m[1]), int(m[2]), int(m[3]), int(m[4]), m[5]
-    if ampm == "PM" and hr < 12: hr += 12
-    if ampm == "AM" and hr == 12: hr  = 0
-    # UFL kickoffs are Eastern Time (UTC-4 in summer)
-    from datetime import timedelta
-    et_dt = datetime(datetime.now().year, month, day, hr, mn, tzinfo=timezone.utc)
-    return et_dt + timedelta(hours=4)  # ET → UTC
-
-def mins_until(kickoff: datetime) -> float:
-    return (kickoff - datetime.now(timezone.utc)).total_seconds() / 60
-
-
 # ── File writer ───────────────────────────────────────────────────────────────
 
-def save_splits(game: dict, kickoff: datetime | None, league: str) -> str:
-    date_str  = kickoff.strftime("%Y-%m-%d") if kickoff else datetime.now().strftime("%Y-%m-%d")
-    filename  = f"{game['away_alias']}@{game['home_alias']}.json"
-    out_dir   = os.path.join(OUTPUT_DIR, date_str)
-    os.makedirs(out_dir, exist_ok=True)
-    filepath  = os.path.join(out_dir, filename)
+def parse_game_date(game_dt: str | None) -> str:
+    """Return YYYY-MM-DD for the game, defaulting to today."""
+    if not game_dt:
+        return datetime.now().strftime("%Y-%m-%d")
+    m = re.match(r'(\d+)/(\d+)', game_dt)
+    if not m:
+        return datetime.now().strftime("%Y-%m-%d")
+    year  = datetime.now().year
+    month = int(m.group(1))
+    day   = int(m.group(2))
+    return f"{year}-{month:02d}-{day:02d}"
 
-    sharp_home = (
-        game["home_handle_pct"] - game["home_bets_pct"]
-        if game["home_handle_pct"] is not None and game["home_bets_pct"] is not None
-        else None
-    )
+
+def save_game(game: dict, league: str, dry_run: bool) -> str:
+    date_str = parse_game_date(game["game_datetime"])
+    sep      = "vs" if game["separator"].lower().startswith("v") else "@"
+    filename = f"{game['participant1_slug']}{sep}{game['participant2_slug']}.json"
+    out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
+    filepath = os.path.join(out_dir, filename)
 
     record = {
         **game,
         "league":      league,
         "source":      "draftkings-network",
         "captured_at": datetime.now(timezone.utc).isoformat(),
-        # positive = sharp money on that side (handle % > public ticket %)
-        "home_sharp_delta": sharp_home,
-        "away_sharp_delta": -sharp_home if sharp_home is not None else None,
     }
 
-    with open(filepath, "w") as f:
-        json.dump(record, f, indent=2)
+    if dry_run:
+        log.info("[DRY RUN] %s → %s", game["matchup"], filepath)
+    else:
+        os.makedirs(out_dir, exist_ok=True)
+        with open(filepath, "w") as f:
+            json.dump(record, f, indent=2)
 
     return filepath
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def run_once(league: str, force: bool, dry_run: bool) -> list[str]:
+def run_once(league: str, dry_run: bool) -> list[str]:
     event_group = EVENT_GROUPS.get(league)
     if not event_group:
-        raise ValueError(f"Unknown league: {league}")
+        raise ValueError(f"Unknown league: {league}. Add to EVENT_GROUPS.")
 
-    url   = f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/?tb_eg={event_group}&tb_edate=n7days&tb_emt=Moneyline"
-    html  = fetch_rendered_html(url)
+    url   = (f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
+             f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=Moneyline")
+    html  = fetch_rendered_html(url, league)
     games = parse_splits_html(html)
     log.info("Parsed %d games", len(games))
 
     saved = []
     for game in games:
-        kickoff   = parse_kickoff(game["game_datetime"])
-        mins      = mins_until(kickoff) if kickoff else None
-        in_window = force or (mins is not None and CAPTURE_MIN <= mins <= CAPTURE_MAX)
-
-        sharp_home = (
-            game["home_handle_pct"] - game["home_bets_pct"]
-            if game["home_handle_pct"] is not None and game["home_bets_pct"] is not None
-            else None
-        )
+        sharp = game["p2_sharp_delta"]
         sharp_label = (
-            f"sharp={'HOME' if sharp_home > 0 else 'AWAY'} Δ{abs(sharp_home)}%"
-            if sharp_home is not None else "sharp=n/a"
+            f"sharp={'P2' if sharp > 0 else 'P1'} Δ{abs(sharp)}%"
+            if sharp is not None else "sharp=n/a"
         )
-
         log.info(
-            "%s | %s | handle H=%s%%/A=%s%%  bets H=%s%%/A=%s%%  %s",
+            "%-42s  handle P1=%3s%% P2=%3s%%  bets P1=%3s%% P2=%3s%%  %s",
             game["matchup"],
-            f"{mins:.0f}min" if mins is not None else "?min",
-            game["home_handle_pct"], game["away_handle_pct"],
-            game["home_bets_pct"],   game["away_bets_pct"],
+            game["participant1_handle_pct"], game["participant2_handle_pct"],
+            game["participant1_bets_pct"],   game["participant2_bets_pct"],
             sharp_label,
         )
-
-        if not in_window:
-            continue
-
-        if dry_run:
-            log.info("  [DRY RUN] would save %s@%s.json", game["away_alias"], game["home_alias"])
-        else:
-            path = save_splits(game, kickoff, league)
-            log.info("  Saved → %s", path)
-            saved.append(path)
+        path = save_game(game, league, dry_run)
+        saved.append(path)
 
     return saved
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--league",  default="ufl", choices=list(EVENT_GROUPS))
-    parser.add_argument("--once",    action="store_true")
-    parser.add_argument("--force",   action="store_true")
-    parser.add_argument("--dry-run", action="store_true")
+    parser = argparse.ArgumentParser(description="Capture DK betting splits")
+    parser.add_argument("--league",  default="ufl", choices=list(EVENT_GROUPS),
+                        help="Sport/league key. Known: " + ", ".join(f"{k}={v}" for k,v in EVENT_GROUPS.items()))
+    parser.add_argument("--dry-run", action="store_true", help="Print without saving")
     args = parser.parse_args()
 
-    if args.once:
-        saved = run_once(args.league, args.force, args.dry_run)
-        log.info("Done — %d file(s) saved", len(saved))
-        return
-
-    log.info("Daemon: polling every %d min, capturing %d-%d min before kickoff",
-             POLL_INTERVAL // 60, CAPTURE_MIN, CAPTURE_MAX)
-    while True:
-        try:
-            saved = run_once(args.league, args.force, args.dry_run)
-            if saved:
-                log.info("Captured %d file(s)", len(saved))
-        except Exception as e:
-            log.error("Run failed: %s", e, exc_info=True)
-        time.sleep(POLL_INTERVAL)
+    saved = run_once(args.league, args.dry_run)
+    log.info("Done — %d file(s) %s", len(saved), "would be saved" if args.dry_run else "saved")
+    if saved:
+        for p in saved:
+            print(f"  {p}")
 
 
 if __name__ == "__main__":

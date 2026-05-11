@@ -1,0 +1,19 @@
+{
+  "matchup": "Columbus Aviators @ Birmingham Stallions",
+  "away_team": "Columbus Aviators",
+  "home_team": "Birmingham Stallions",
+  "away_alias": "CLB",
+  "home_alias": "BHM",
+  "game_datetime": "5/17, 01:00PM",
+  "away_odds": "+160",
+  "home_odds": "-192",
+  "away_handle_pct": 42,
+  "home_handle_pct": 58,
+  "away_bets_pct": 43,
+  "home_bets_pct": 57,
+  "home_sharp_delta": 1,
+  "away_sharp_delta": -1,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-11T05:18:49.300129+00:00"
+}
