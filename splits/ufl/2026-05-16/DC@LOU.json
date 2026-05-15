@@ -6,15 +6,15 @@
   "participant1_slug": "DC",
   "participant2_slug": "LOU",
   "game_datetime": "5/16, 12:00PM",
-  "participant1_odds": "-265",
-  "participant2_odds": "+215",
-  "participant1_handle_pct": 63,
-  "participant2_handle_pct": 37,
+  "participant1_odds": "-238",
+  "participant2_odds": "+195",
+  "participant1_handle_pct": 75,
+  "participant2_handle_pct": 25,
   "participant1_bets_pct": 85,
   "participant2_bets_pct": 15,
-  "p2_sharp_delta": 22,
-  "p1_sharp_delta": -22,
+  "p2_sharp_delta": 10,
+  "p1_sharp_delta": -10,
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-05-13T15:26:10.992689+00:00"
+  "captured_at": "2026-05-15T20:20:26.712517+00:00"
 }
