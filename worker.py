@@ -88,17 +88,18 @@ def process_message(msg):
                 )
                 return
             is_skill_receiver = any(p in scraped_pos for p in ("WR", "TE", "RB", "WIDE", "TIGHT", "RUNNING"))
-            if is_skill_receiver:
+            # If position is absent, infer from stats: receiving-only page → receiver
+            if is_skill_receiver or (receiving_rows and not passing_rows):
                 if not receiving_rows:
                     logging.warning(
-                        f"SKIP {key}: no receiving stats for {scraped_pos} — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no receiving stats for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
             else:
                 # QB / default: require passing stats
                 if not passing_rows:
                     logging.warning(
-                        f"SKIP {key}: no passing stats — wrong CFB disambiguation for {pfr_player_id} (try a different -N suffix)"
+                        f"SKIP {key}: no passing or receiving stats — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
 
@@ -164,6 +165,10 @@ def loop():
             except PageNotFoundError as e:
                 # 404 pages are expected for wrong disambiguation suffixes — discard quietly
                 logging.debug(f"404 skip: {e}")
+                sqs.delete_message(
+                    QueueUrl=SQS_URL,
+                    ReceiptHandle=m["ReceiptHandle"]
+                )
             except Exception as e:
                 logging.error(f"Error processing message: {e}", exc_info=True)
 
