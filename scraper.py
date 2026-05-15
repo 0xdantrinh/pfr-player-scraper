@@ -9,17 +9,19 @@ import re
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
-# Sticky session for pro-football-reference.com. Solve the Cloudflare challenge
-# once and reuse the cookie for all subsequent NFL player page requests.
+# Sticky sessions per domain — CFB pages share sports-reference.com but the
+# browser cache bleeds between players if they share a session with NFL pages.
 PFR_SESSION = "pfr-main"
+CFB_SESSION = "cfb-main"
 
 
 def fetch_page(url):
     # Fast request first (no challenge interaction)
+    session = CFB_SESSION if "sports-reference.com/cfb" in url else PFR_SESSION
     payload = {
         "cmd": "request.get",
         "url": url,
-        "session": PFR_SESSION,
+        "session": session,
         "session_ttl_minutes": 60,
         "maxTimeout": 120000
     }
