@@ -103,13 +103,29 @@ def parse_tables(soup, stats):
             ]
 
         rows = []
+        bold_flags = []  # parallel list: which rows had any bold (led-conference) cell
         for tr in table.find_all("tr"):
-            cols = [c.get_text(strip=True) for c in tr.find_all(["td", "th"])]
-            if not cols:
+            cells = tr.find_all(["td", "th"])
+            if not cells:
                 continue
+            cols = [c.get_text(strip=True) for c in cells]
+            # A bold <strong> tag in any data cell means that stat led the conference
+            led = any(bool(c.find("strong")) for c in cells if c.name == "td")
             rows.append(cols)
+            bold_flags.append(led)
 
-        stats[tid] = normalize_rows(headers, rows)
+        normalized = normalize_rows(headers, rows)
+        # Attach led_conference flag to each normalized row (index aligns after normalize_rows
+        # strips header/career rows, so we re-derive by matching year_id)
+        bold_by_year = {}
+        for row, led in zip(rows, bold_flags):
+            if row:
+                bold_by_year[row[0]] = led
+        for obj in normalized:
+            yr = obj.get("year_id", "")
+            obj["led_conference"] = bold_by_year.get(yr, False)
+
+        stats[tid] = normalized
 
 
 def parse_comment_tables(soup, stats):
@@ -156,6 +172,49 @@ def extract_meta(soup):
     return info
 
 
+def parse_leaderboard_awards(soup):
+    """Parse the 'Appearances on Leaderboards, Awards, and Honors' section.
+
+    Returns a dict with:
+      led_conference_count  - seasons where a stat led the conference (#1)
+      all_american_count    - All-American selections
+      all_conference_count  - All-Conference selections
+      leaderboard_appearances - total leaderboard entries
+    """
+    out = {
+        "led_conference_count":    0,
+        "all_american_count":      0,
+        "all_conference_count":    0,
+        "leaderboard_appearances": 0,
+    }
+
+    # The section header varies; find it by text content
+    section = None
+    for h2 in soup.find_all(["h2", "h3", "h4"]):
+        if "leaderboard" in h2.get_text(strip=True).lower() or "awards" in h2.get_text(strip=True).lower():
+            section = h2.find_parent()
+            break
+
+    if not section:
+        return out
+
+    text = section.get_text(" ", strip=True)
+
+    # Count #1 appearances (led conference)
+    out["led_conference_count"] = len(re.findall(r'\(#1\)', text))
+    # Total leaderboard entries
+    out["leaderboard_appearances"] = len(re.findall(r'\(#\d+\)', text))
+    # Award keywords
+    text_lower = text.lower()
+    out["all_american_count"]  = text_lower.count("all-american")
+    out["all_conference_count"] = text_lower.count("all-conference") + text_lower.count("all-sec") + \
+                                   text_lower.count("all-big") + text_lower.count("all-acc") + \
+                                   text_lower.count("all-pac") + text_lower.count("all-mac") + \
+                                   text_lower.count("all-aac") + text_lower.count("all-mwc")
+
+    return out
+
+
 def parse_page(html, url):
     soup = BeautifulSoup(html, "lxml")
 
@@ -193,7 +252,8 @@ def parse_page(html, url):
         "scraped_at": datetime.utcnow().isoformat() + "Z",
         "player_info": extract_meta(soup),
         "stats": stats,
-        "career": career
+        "career": career,
+        "awards": parse_leaderboard_awards(soup),
     }
 
 

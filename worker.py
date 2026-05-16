@@ -82,24 +82,31 @@ def process_message(msg):
             scraped_pos    = (data.get("player_info", {}).get("position") or "").upper()
             passing_rows   = data.get("stats", {}).get("passing_standard", [])
             receiving_rows = data.get("stats", {}).get("receiving_standard", [])
+            return_rows    = (data.get("stats", {}).get("kick_return_standard", []) or
+                              data.get("stats", {}).get("punt_return_standard", []))
+            # UT/RB players (e.g. Tyreek Hill) have receiving cols in rushing_standard
+            rushing_rows   = data.get("stats", {}).get("rushing_standard", [])
+            if not receiving_rows and rushing_rows:
+                if any(r.get("rec") or r.get("rec_yds") for r in rushing_rows):
+                    receiving_rows = rushing_rows  # treat as receiver for guard purposes
             if not _name_matches_pfr_id(scraped_name, pfr_player_id):
                 logging.warning(
                     f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
                 )
                 return
             is_skill_receiver = any(p in scraped_pos for p in ("WR", "TE", "RB", "WIDE", "TIGHT", "RUNNING"))
-            # If position is absent, infer from stats: receiving-only page → receiver
-            if is_skill_receiver or (receiving_rows and not passing_rows):
-                if not receiving_rows:
+            # Infer receiver from stats when position absent: has receiving or return stats but no passing
+            if is_skill_receiver or (not passing_rows and (receiving_rows or return_rows)):
+                if not receiving_rows and not return_rows:
                     logging.warning(
-                        f"SKIP {key}: no receiving stats for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no receiving or return stats for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
             else:
                 # QB / default: require passing stats
                 if not passing_rows:
                     logging.warning(
-                        f"SKIP {key}: no passing or receiving stats — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no passing, receiving, or return stats — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
 
