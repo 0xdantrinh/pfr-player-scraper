@@ -8,13 +8,13 @@
   "game_datetime": "5/17, 01:00PM",
   "participant1_odds": "+114",
   "participant2_odds": "-135",
-  "participant1_handle_pct": 54,
-  "participant2_handle_pct": 46,
-  "participant1_bets_pct": 25,
-  "participant2_bets_pct": 75,
-  "p2_sharp_delta": -29,
-  "p1_sharp_delta": 29,
+  "participant1_handle_pct": 51,
+  "participant2_handle_pct": 49,
+  "participant1_bets_pct": 24,
+  "participant2_bets_pct": 76,
+  "p2_sharp_delta": -27,
+  "p1_sharp_delta": 27,
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-05-16T19:37:36.890749+00:00"
+  "captured_at": "2026-05-17T01:50:32.901799+00:00"
 }
