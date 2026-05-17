@@ -32,6 +32,9 @@ def _name_matches_pfr_id(name: str, pfr_id: str) -> bool:
     """
     if not pfr_id or not name or len(pfr_id) < 6:
         return True
+    # UUID-format IDs (sportradarId) are not name-encoded — skip the check
+    if '-' in pfr_id:
+        return True
     last_frag  = pfr_id[:4].lower()
     first_frag = pfr_id[4:6].lower()
     name_lower = name.lower().replace("-", "").replace("'", "").replace(".", "")
