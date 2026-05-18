@@ -184,6 +184,43 @@ def parse_game_date(game_dt: str | None) -> str:
     return f"{year}-{month:02d}-{day:02d}"
 
 
+def load_previous_game(filepath: str) -> dict | None:
+    """Load the previous version of a game file if it exists."""
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r") as f:
+                return json.load(f)
+        except Exception:
+            return None
+    return None
+
+
+def calculate_deltas(current: dict, previous: dict | None) -> dict:
+    """Calculate movement in percentages since last capture."""
+    deltas = {}
+    if previous is None:
+        return deltas
+    
+    # Calculate handle and bets deltas
+    for key in ["participant1_handle_pct", "participant2_handle_pct",
+                "participant1_bets_pct", "participant2_bets_pct"]:
+        if key in current and key in previous:
+            curr_val = current[key]
+            prev_val = previous[key]
+            if curr_val is not None and prev_val is not None:
+                deltas[f"{key}_delta"] = curr_val - prev_val
+    
+    # Calculate sharp delta movement
+    for key in ["p1_sharp_delta", "p2_sharp_delta"]:
+        if key in current and key in previous:
+            curr_val = current[key]
+            prev_val = previous[key]
+            if curr_val is not None and prev_val is not None:
+                deltas[f"{key}_delta"] = curr_val - prev_val
+    
+    return deltas
+
+
 def save_game(game: dict, league: str, dry_run: bool) -> str:
     date_str = parse_game_date(game["game_datetime"])
     sep      = "-vs-" if game["separator"].lower().startswith("v") else "@"
@@ -191,11 +228,16 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
     filepath = os.path.join(out_dir, filename)
 
+    # Load previous version to calculate deltas
+    previous = load_previous_game(filepath)
+    deltas = calculate_deltas(game, previous)
+
     record = {
         **game,
         "league":      league,
         "source":      "draftkings-network",
         "captured_at": datetime.now(timezone.utc).isoformat(),
+        **deltas,  # Add movement deltas if available
     }
 
     if dry_run:
