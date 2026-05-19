@@ -89,17 +89,17 @@ def plot_game(game_data: dict, show: bool = True, save_path: str | None = None) 
     fig.suptitle(f"Market Movement: {matchup}", fontsize=14, fontweight="bold")
     
     # Handle percentage
-    ax1.plot(times, handle_p1, marker="o", label=f"{p1_name} Handle", linewidth=2)
-    ax1.plot(times, handle_p2, marker="s", label=f"{p2_name} Handle", linewidth=2)
+    ax1.plot(times, handle_p1, marker="o", label=f"{p1_name} Handle", linewidth=2, alpha=0.8, linestyle="-")
+    ax1.plot(times, handle_p2, marker="s", label=f"{p2_name} Handle", linewidth=2, alpha=0.8, linestyle="--")
     ax1.set_ylabel("Handle %", fontsize=11)
     ax1.set_title("Money Wagered (Handle %)", fontsize=12, fontweight="bold")
     ax1.legend(loc="best")
     ax1.grid(True, alpha=0.3)
     ax1.set_ylim(0, 100)
-    
+
     # Betting tickets percentage
-    ax2.plot(times, bets_p1, marker="o", label=f"{p1_name} Bets", linewidth=2)
-    ax2.plot(times, bets_p2, marker="s", label=f"{p2_name} Bets", linewidth=2)
+    ax2.plot(times, bets_p1, marker="o", label=f"{p1_name} Bets", linewidth=2, alpha=0.8, linestyle="-")
+    ax2.plot(times, bets_p2, marker="s", label=f"{p2_name} Bets", linewidth=2, alpha=0.8, linestyle="--")
     ax2.set_ylabel("Bets %", fontsize=11)
     ax2.set_title("Public Tickets (Bets %)", fontsize=12, fontweight="bold")
     ax2.legend(loc="best")
@@ -115,9 +115,9 @@ def plot_game(game_data: dict, show: bool = True, save_path: str | None = None) 
         odds_p2_clean = [x for x in odds_p2_numeric if x is not None]
         if odds_p1_clean or odds_p2_clean:
             if odds_p1_clean:
-                ax3.plot(times, odds_p1_numeric, marker="o", label=f"{p1_name} Odds", linewidth=2)
+                ax3.plot(times, odds_p1_numeric, marker="o", label=f"{p1_name} Odds", linewidth=2, alpha=0.8, linestyle="-")
             if odds_p2_clean:
-                ax3.plot(times, odds_p2_numeric, marker="s", label=f"{p2_name} Odds", linewidth=2)
+                ax3.plot(times, odds_p2_numeric, marker="s", label=f"{p2_name} Odds", linewidth=2, alpha=0.8, linestyle="--")
             ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
             ax3.set_ylabel("Odds", fontsize=11)
             ax3.set_xlabel("Capture Time", fontsize=11)
