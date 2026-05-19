@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import json
 import time
 import logging
@@ -6,6 +7,8 @@ import random
 import boto3
 from scraper import fetch_page, parse_page, PageNotFoundError
 from cfb_scraper import parse_page as parse_cfb_page
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

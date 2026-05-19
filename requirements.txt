@@ -4,3 +4,4 @@ lxml
 boto3
 botocore[crt]
 matplotlib
+python-dotenv

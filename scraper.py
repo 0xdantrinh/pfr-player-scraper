@@ -6,6 +6,9 @@ import sys
 import os
 from datetime import datetime
 import re
+from dotenv import load_dotenv
+
+load_dotenv()
 
 FLARESOLVERR_URL = os.environ.get("FLARESOLVERR_URL", "http://localhost:8191/v1")
 
