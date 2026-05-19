@@ -20,6 +20,18 @@ except ImportError:
     exit(1)
 
 
+def parse_odds(odds_str: str | int | None) -> int | None:
+    """Convert odds string like '+180' or '-135' to numeric value."""
+    if odds_str is None:
+        return None
+    if isinstance(odds_str, int):
+        return odds_str
+    try:
+        return int(str(odds_str).replace("+", "").replace("−", "-").replace("–", "-"))
+    except (ValueError, AttributeError):
+        return None
+
+
 def find_game_files(league: str) -> dict:
     """Find all game files for a league and return as dict."""
     splits_dir = Path("splits") / league
@@ -96,14 +108,16 @@ def plot_game(game_data: dict, show: bool = True, save_path: str | None = None) 
     
     # Odds movement
     if odds_p1 or odds_p2:
-        # Filter out None values for plotting
-        odds_p1_clean = [x for x in odds_p1 if x is not None]
-        odds_p2_clean = [x for x in odds_p2 if x is not None]
+        # Convert odds strings to numeric values
+        odds_p1_numeric = [parse_odds(x) for x in odds_p1]
+        odds_p2_numeric = [parse_odds(x) for x in odds_p2]
+        odds_p1_clean = [x for x in odds_p1_numeric if x is not None]
+        odds_p2_clean = [x for x in odds_p2_numeric if x is not None]
         if odds_p1_clean or odds_p2_clean:
             if odds_p1_clean:
-                ax3.plot(times, odds_p1, marker="o", label=f"{p1_name} Odds", linewidth=2)
+                ax3.plot(times, odds_p1_numeric, marker="o", label=f"{p1_name} Odds", linewidth=2)
             if odds_p2_clean:
-                ax3.plot(times, odds_p2, marker="s", label=f"{p2_name} Odds", linewidth=2)
+                ax3.plot(times, odds_p2_numeric, marker="s", label=f"{p2_name} Odds", linewidth=2)
             ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
             ax3.set_ylabel("Odds", fontsize=11)
             ax3.set_xlabel("Capture Time", fontsize=11)

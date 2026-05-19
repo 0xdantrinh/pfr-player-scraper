@@ -67,16 +67,6 @@ def participant_slug(name: str) -> str:
     return "-".join(reversed(parts)) if len(parts) > 1 else clean.lower()
 
 
-def parse_odds(odds_str: str | None) -> int | None:
-    """Convert odds string like '+180' or '-135' to numeric value."""
-    if not odds_str:
-        return None
-    try:
-        return int(odds_str.replace("+", "").replace("−", "-").replace("–", "-"))
-    except (ValueError, AttributeError):
-        return None
-
-
 def check_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None) -> bool:
     """
     Mr Vegas Theory: Vegas leans towards the dog to win.
@@ -246,16 +236,11 @@ def build_history_arrays(current: dict, previous: dict | None) -> dict:
             "participant1_handle_pct", "participant2_handle_pct",
             "participant1_bets_pct", "participant2_bets_pct",
             "p1_sharp_delta", "p2_sharp_delta",
+            "participant1_odds", "participant2_odds",
         ]
         for key in tracked_keys:
             val = current.get(key)
             history[f"{key}_history"] = [val] if val is not None else []
-
-        # Convert odds to numeric for plotting
-        p1_odds = parse_odds(current.get("participant1_odds"))
-        p2_odds = parse_odds(current.get("participant2_odds"))
-        history["participant1_odds_history"] = [p1_odds] if p1_odds is not None else []
-        history["participant2_odds_history"] = [p2_odds] if p2_odds is not None else []
         return history
 
     # Append current values to previous history arrays
@@ -263,18 +248,13 @@ def build_history_arrays(current: dict, previous: dict | None) -> dict:
         "participant1_handle_pct", "participant2_handle_pct",
         "participant1_bets_pct", "participant2_bets_pct",
         "p1_sharp_delta", "p2_sharp_delta",
+        "participant1_odds", "participant2_odds",
     ]
     for key in tracked_keys:
         hist_key = f"{key}_history"
         prev_hist = previous.get(hist_key, [])
         # Preserve previous history and append current value
         history[hist_key] = prev_hist + [current.get(key)]
-
-    # Convert odds to numeric for plotting
-    p1_odds = parse_odds(current.get("participant1_odds"))
-    p2_odds = parse_odds(current.get("participant2_odds"))
-    history["participant1_odds_history"] = previous.get("participant1_odds_history", []) + ([p1_odds] if p1_odds is not None else [])
-    history["participant2_odds_history"] = previous.get("participant2_odds_history", []) + ([p2_odds] if p2_odds is not None else [])
 
     return history
 
