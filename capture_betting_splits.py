@@ -60,6 +60,25 @@ def participant_slug(name: str) -> str:
     return "-".join(reversed(parts)) if len(parts) > 1 else clean.lower()
 
 
+def check_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None) -> bool:
+    """
+    Mr Vegas Theory: Vegas leans towards the dog to win.
+    Flag triggers if either participant has odds of +180 or better.
+    """
+    try:
+        # Parse odds strings like "+180", "-135"
+        for odds_str in [p1_odds, p2_odds]:
+            if not odds_str:
+                continue
+            odds_val = int(odds_str.replace("+", "").replace("−", "-").replace("–", "-"))
+            # Positive odds of +180 or higher indicates underdog
+            if odds_val >= 180:
+                return True
+    except (ValueError, AttributeError):
+        pass
+    return False
+
+
 # ── FlareSolverr ──────────────────────────────────────────────────────────────
 
 def fetch_rendered_html(url: str, league: str = "default") -> str:
@@ -221,6 +240,21 @@ def calculate_deltas(current: dict, previous: dict | None) -> dict:
     return deltas
 
 
+def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odds: str | None, 
+                                      previous: dict | None) -> bool:
+    """
+    Mr Vegas Theory: Vegas leans towards the dog to win.
+    Flag triggers if either participant has/had odds of +180 or better.
+    Once true, the flag persists (sticky) because it validates the theory.
+    """
+    # If previous record had the flag, keep it true (sticky)
+    if previous and previous.get("mr_vegas_flag") is True:
+        return True
+    
+    # Check current odds
+    return check_mr_vegas_flag(current_p1_odds, current_p2_odds)
+
+
 def save_game(game: dict, league: str, dry_run: bool) -> str:
     date_str = parse_game_date(game["game_datetime"])
     sep      = "-vs-" if game["separator"].lower().startswith("v") else "@"
@@ -228,15 +262,23 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
     filepath = os.path.join(out_dir, filename)
 
-    # Load previous version to calculate deltas
+    # Load previous version to calculate deltas and check mr_vegas history
     previous = load_previous_game(filepath)
     deltas = calculate_deltas(game, previous)
+    
+    # Check mr_vegas flag with history — sticky flag
+    mr_vegas_flag = check_mr_vegas_flag_with_history(
+        game["participant1_odds"], 
+        game["participant2_odds"], 
+        previous
+    )
 
     record = {
         **game,
         "league":      league,
         "source":      "draftkings-network",
         "captured_at": datetime.now(timezone.utc).isoformat(),
+        "mr_vegas_flag": mr_vegas_flag,  # Replace the non-sticky version
         **deltas,  # Add movement deltas if available
     }
 
