@@ -240,6 +240,42 @@ def calculate_deltas(current: dict, previous: dict | None) -> dict:
     return deltas
 
 
+def build_history_arrays(current: dict, previous: dict | None) -> dict:
+    """Build historical arrays for tracking market movement over time."""
+    history = {}
+    
+    # If no previous record, start fresh arrays with current values
+    if previous is None:
+        tracked_keys = [
+            "participant1_handle_pct", "participant2_handle_pct",
+            "participant1_bets_pct", "participant2_bets_pct",
+            "p1_sharp_delta", "p2_sharp_delta",
+            "participant1_odds", "participant2_odds"
+        ]
+        for key in tracked_keys:
+            val = current.get(key)
+            history[f"{key}_history"] = [val] if val is not None else []
+        return history
+    
+    # Append current values to previous history arrays
+    tracked_keys = [
+        "participant1_handle_pct", "participant2_handle_pct",
+        "participant1_bets_pct", "participant2_bets_pct",
+        "p1_sharp_delta", "p2_sharp_delta",
+        "participant1_odds", "participant2_odds"
+    ]
+    for key in tracked_keys:
+        hist_key = f"{key}_history"
+        prev_hist = previous.get(hist_key, [])
+        # Preserve previous history and append current value
+        history[hist_key] = prev_hist + [current.get(key)]
+    
+    # Also track capture timestamps
+    history["captured_at_history"] = previous.get("captured_at_history", []) + [current.get("captured_at")]
+    
+    return history
+
+
 def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odds: str | None, 
                                       previous: dict | None) -> bool:
     """
@@ -262,9 +298,10 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
     filepath = os.path.join(out_dir, filename)
 
-    # Load previous version to calculate deltas and check mr_vegas history
+    # Load previous version to build history arrays and check mr_vegas history
     previous = load_previous_game(filepath)
     deltas = calculate_deltas(game, previous)
+    history = build_history_arrays(game, previous)
     
     # Check mr_vegas flag with history — sticky flag
     mr_vegas_flag = check_mr_vegas_flag_with_history(
@@ -278,8 +315,9 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
         "league":      league,
         "source":      "draftkings-network",
         "captured_at": datetime.now(timezone.utc).isoformat(),
-        "mr_vegas_flag": mr_vegas_flag,  # Replace the non-sticky version
-        **deltas,  # Add movement deltas if available
+        "mr_vegas_flag": mr_vegas_flag,
+        **deltas,  # Latest deltas (for quick reference)
+        **history,  # Historical arrays for plotting
     }
 
     if dry_run:
