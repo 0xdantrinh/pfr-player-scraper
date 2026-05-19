@@ -40,8 +40,14 @@ def find_game_files(league: str) -> dict:
     return games
 
 
-def plot_game(game_data: dict, show: bool = True) -> None:
-    """Plot market movement for a single game."""
+def plot_game(game_data: dict, show: bool = True, save_path: str | None = None) -> None:
+    """Plot market movement for a single game.
+    
+    Args:
+        game_data: Game data dict from JSON
+        show: Whether to display the plot
+        save_path: Optional path to save the plot as PNG (e.g., "plots/ufl/STL@HOU.png")
+    """
     matchup = game_data.get("matchup", "Game")
     p1_name = game_data.get("participant1_slug", "P1")
     p2_name = game_data.get("participant2_slug", "P2")
@@ -56,7 +62,8 @@ def plot_game(game_data: dict, show: bool = True) -> None:
     timestamps = game_data.get("captured_at_history", [])
     
     if not handle_p1:
-        print(f"No history data for {matchup}")
+        if save_path is None:
+            print(f"No history data for {matchup}")
         return
     
     # Parse timestamps
@@ -89,14 +96,20 @@ def plot_game(game_data: dict, show: bool = True) -> None:
     
     # Odds movement
     if odds_p1 or odds_p2:
-        ax3.plot(times, odds_p1, marker="o", label=f"{p1_name} Odds", linewidth=2)
-        ax3.plot(times, odds_p2, marker="s", label=f"{p2_name} Odds", linewidth=2)
-        ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
-        ax3.set_ylabel("Odds", fontsize=11)
-        ax3.set_xlabel("Capture Time", fontsize=11)
-        ax3.set_title("Line Movement", fontsize=12, fontweight="bold")
-        ax3.legend(loc="best")
-        ax3.grid(True, alpha=0.3)
+        # Filter out None values for plotting
+        odds_p1_clean = [x for x in odds_p1 if x is not None]
+        odds_p2_clean = [x for x in odds_p2 if x is not None]
+        if odds_p1_clean or odds_p2_clean:
+            if odds_p1_clean:
+                ax3.plot(times, odds_p1, marker="o", label=f"{p1_name} Odds", linewidth=2)
+            if odds_p2_clean:
+                ax3.plot(times, odds_p2, marker="s", label=f"{p2_name} Odds", linewidth=2)
+            ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+            ax3.set_ylabel("Odds", fontsize=11)
+            ax3.set_xlabel("Capture Time", fontsize=11)
+            ax3.set_title("Line Movement", fontsize=12, fontweight="bold")
+            ax3.legend(loc="best")
+            ax3.grid(True, alpha=0.3)
     
     # Format x-axis
     if isinstance(times[0], datetime):
@@ -105,8 +118,14 @@ def plot_game(game_data: dict, show: bool = True) -> None:
     
     plt.tight_layout()
     
-    if show:
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, dpi=100, bbox_inches="tight")
+        plt.close()
+    elif show:
         plt.show()
+    else:
+        plt.close()
 
 
 def main():
