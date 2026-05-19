@@ -215,29 +215,8 @@ def load_previous_game(filepath: str) -> dict | None:
 
 
 def calculate_deltas(current: dict, previous: dict | None) -> dict:
-    """Calculate movement in percentages since last capture."""
-    deltas = {}
-    if previous is None:
-        return deltas
-    
-    # Calculate handle and bets deltas
-    for key in ["participant1_handle_pct", "participant2_handle_pct",
-                "participant1_bets_pct", "participant2_bets_pct"]:
-        if key in current and key in previous:
-            curr_val = current[key]
-            prev_val = previous[key]
-            if curr_val is not None and prev_val is not None:
-                deltas[f"{key}_delta"] = curr_val - prev_val
-    
-    # Calculate sharp delta movement
-    for key in ["p1_sharp_delta", "p2_sharp_delta"]:
-        if key in current and key in previous:
-            curr_val = current[key]
-            prev_val = previous[key]
-            if curr_val is not None and prev_val is not None:
-                deltas[f"{key}_delta"] = curr_val - prev_val
-    
-    return deltas
+    """Deltas are now redundant with history arrays. Keeping this for backwards compatibility if needed."""
+    return {}
 
 
 def build_history_arrays(current: dict, previous: dict | None) -> dict:
@@ -270,9 +249,6 @@ def build_history_arrays(current: dict, previous: dict | None) -> dict:
         # Preserve previous history and append current value
         history[hist_key] = prev_hist + [current.get(key)]
     
-    # Also track capture timestamps
-    history["captured_at_history"] = previous.get("captured_at_history", []) + [current.get("captured_at")]
-    
     return history
 
 
@@ -298,9 +274,11 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
     filepath = os.path.join(out_dir, filename)
 
+    # Generate capture timestamp
+    capture_time = datetime.now(timezone.utc).isoformat()
+
     # Load previous version to build history arrays and check mr_vegas history
     previous = load_previous_game(filepath)
-    deltas = calculate_deltas(game, previous)
     history = build_history_arrays(game, previous)
     
     # Check mr_vegas flag with history — sticky flag
@@ -310,14 +288,18 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
         previous
     )
 
+    # Build history arrays with the current capture time
+    capture_times = previous.get("captured_at_history", []) if previous else []
+    capture_times.append(capture_time)
+
     record = {
         **game,
         "league":      league,
         "source":      "draftkings-network",
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": capture_time,
         "mr_vegas_flag": mr_vegas_flag,
-        **deltas,  # Latest deltas (for quick reference)
         **history,  # Historical arrays for plotting
+        "captured_at_history": capture_times,  # Explicit capture times
     }
 
     if dry_run:
