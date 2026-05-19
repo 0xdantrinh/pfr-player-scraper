@@ -183,7 +183,6 @@ All stat tables are automatically extracted, including tables hidden inside HTML
 
 This keeps the parsing logic consistent with the NFL scraper.
 
-
 ---
 
 # AWS Deployment
@@ -369,7 +368,6 @@ S3 Data Lake
 
 MIT
 
-
 ---
 
 # Team Scraper (Offensive Context Dataset)
@@ -474,8 +472,6 @@ This enables features such as:
 
 These features significantly improve player rating models.
 
-
-
 # FlareSolverr Configuration (Important)
 
 To reliably bypass Cloudflare Turnstile challenges on Pro‑Football‑Reference the scraper uses a persistent FlareSolverr session and several performance optimizations.
@@ -541,7 +537,6 @@ Recommended concurrency:
 
 Running too many concurrent workers against a single FlareSolverr instance can cause Chrome timeouts.
 
-
 ## Recommended Local FlareSolverr Setup
 
 Run FlareSolverr with media disabled (much faster for PFR):
@@ -566,17 +561,31 @@ This disables images, fonts, and other heavy resources inside the browser which 
 
 ## Supported Sports
 
-| League | Event Group | Notes |
-|--------|-------------|-------|
-| `ufl`  | 212333      | UFL football |
-| `ufc`  | 9034        | UFC fights |
-| `nfl`  | 88808       | NFL football |
+| League | Event Group | Notes          |
+| ------ | ----------- | -------------- |
+| `ufl`  | 212333      | UFL football   |
+| `ufc`  | 9034        | UFC fights     |
+| `nfl`  | 88808       | NFL football   |
 | `nba`  | 42648       | NBA basketball |
-| `mlb`  | 84240       | MLB baseball |
+| `mlb`  | 84240       | MLB baseball   |
 
 Find additional event group IDs in the `tb_eg=` URL parameter on the DK Network page.
 
 ## Usage
+
+Start FlareSolverr first:
+
+```bash
+docker start flaresolverr
+```
+
+Activate virtual environment:
+
+```bash
+source venv/bin/activate
+```
+
+Capture all upcoming games for a league:
 
 ```bash
 # Capture all upcoming UFL games
@@ -589,37 +598,192 @@ python capture_betting_splits.py --league ufc
 python capture_betting_splits.py --league ufl --dry-run
 ```
 
-## Output
+## Data Structure
 
-Files saved to `splits/{league}/{YYYY-MM-DD}/{participant1}vs{participant2}.json`:
+Files saved to `splits/{league}/{YYYY-MM-DD}/{participant1}@{participant2}.json`:
 
 ```
-splits/ufl/2026-05-15/ORL@DAL.json
-splits/ufc/2026-05-16/tokkos-tucovserslan-ivan.json
+splits/ufl/2026-05-22/DC@ORL.json
+splits/ufc/2026-05-16/tokkos-tuco-vs-erslan-ivan.json
 ```
 
 Each JSON includes:
+
+**Current Snapshot:**
+
+- `participant1/2_odds` — Current moneyline odds
 - `participant1/2_handle_pct` — % of money wagered on each side
 - `participant1/2_bets_pct` — % of tickets (public) on each side
 - `p1/p2_sharp_delta` — handle% minus bets% (positive = sharp money on that side)
-- `participant1/2_odds`, `game_datetime`, `captured_at`
+- `mr_vegas_flag` — true if either participant hit +180 odds (Mr Vegas Theory indicator)
 
-## Example sharp signal
+**Historical Arrays** (for plotting):
+
+- `participant1/2_odds_history` — Array of odds over time
+- `participant1/2_handle_pct_history` — Array of handle percentages
+- `participant1/2_bets_pct_history` — Array of public bet percentages
+- `p1/p2_sharp_delta_history` — Array of sharp deltas
+- `captured_at_history` — Array of capture timestamps (for x-axis)
+
+Example:
 
 ```json
 {
-  "matchup": "Tuco Tokkos vs Ivan Erslan",
-  "participant1_handle_pct": 79,
-  "participant1_bets_pct": 43,
-  "p1_sharp_delta": 36
+  "matchup": "St. Louis Battlehawks @ Houston Gamblers",
+  "participant1": "St. Louis Battlehawks",
+  "participant2": "Houston Gamblers",
+  "participant1_odds": "-162",
+  "participant2_odds": "+136",
+  "participant1_handle_pct": 92,
+  "participant2_handle_pct": 8,
+  "participant1_bets_pct": 77,
+  "participant2_bets_pct": 23,
+  "p1_sharp_delta": 15,
+  "p2_sharp_delta": -15,
+  "mr_vegas_flag": false,
+  "participant1_odds_history": ["-162", "-165", "-162"],
+  "participant2_odds_history": ["+136", "+140", "+136"],
+  "participant1_handle_pct_history": [94, 93, 92],
+  "participant2_handle_pct_history": [6, 7, 8],
+  "participant1_bets_pct_history": [85, 80, 77],
+  "participant2_bets_pct_history": [15, 20, 23],
+  "captured_at_history": [
+    "2026-05-18T17:00:07.419397+00:00",
+    "2026-05-18T21:30:12.805621+00:00",
+    "2026-05-19T16:52:45.592317+00:00"
+  ]
 }
 ```
-→ 79% of money on Tokkos but only 43% of tickets — sharp money heavily on Tokkos despite public split.
 
-## Recommended cron
+## Interpreting the Data
 
-```cron
-# Run at 5pm and 7pm every Saturday and Sunday (before UFL/UFC kickoffs)
-0 17,19 * * 6,7 cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league ufl
+### Sharp Money Signals
+
+**Positive `p1_sharp_delta`:**
+
+- Handle % on P1 > Bets % on P1
+- Example: 79% handle vs 43% bets = 36% sharp delta
+- Meaning: Sharp money is backing P1, public favors P2
+
+**Negative `p1_sharp_delta`:**
+
+- Handle % on P1 < Bets % on P1
+- Sharp money is opposing P1, public favors P1
+
+### Mr Vegas Theory
+
+The `mr_vegas_flag` triggers if either participant's odds ever reached **+180 or better**.
+
+**Why it matters:**
+
+- Vegas initially sets the line to balance action
+- If a dog hits +180+, it signals Vegas's initial lean toward that underdog
+- Once triggered, the flag remains `true` even if odds tighten (validates the theory)
+
+Example:
+
+```json
+{
+  "matchup": "Dallas Renegades @ Louisville Kings",
+  "participant1_odds": "+114",
+  "participant2_odds": "-135",
+  "mr_vegas_flag": true
+}
 ```
 
+→ Either DAL or LOU hit +180+ at some point. This matchup is a Mr Vegas candidate.
+
+## Plotting Market Movement
+
+Use `plot_splits.py` to visualize how betting splits and odds have moved over time.
+
+### Installation
+
+Make sure matplotlib is installed:
+
+```bash
+pip install matplotlib
+```
+
+### Commands
+
+**List all games for a league:**
+
+```bash
+python plot_splits.py --league ufl
+```
+
+Output:
+
+```
+Available games for ufl:
+  D.C. Defenders @ Orlando Storm (-108 / -112)
+  Birmingham Stallions @ Columbus Aviators (93 / 7)
+  Dallas Renegades @ Louisville Kings (+114 / -135) [MR VEGAS]
+  St. Louis Battlehawks @ Houston Gamblers (-162 / +136)
+
+To plot a game, use: python plot_splits.py --league ufl --matchup <name>
+```
+
+**Plot a specific game:**
+
+```bash
+python plot_splits.py --league ufl --matchup "STL@HOU"
+python plot_splits.py --league ufl --matchup "DAL@LOU"
+```
+
+**Plot all games in one figure (one per window):**
+
+```bash
+python plot_splits.py --league ufl --all
+```
+
+### Output
+
+The plot shows 3 subplots over time:
+
+1. **Handle % (Money Wagered)** — Shows which side professionals and public are backing
+2. **Bets % (Public Tickets)** — Shows where casual bettors are placing tickets
+3. **Line Movement** — Shows how odds have shifted (indicates market adjustment)
+
+**Reading the chart:**
+
+- Diverging lines in Handle vs Bets = sharp/public split
+- Sharp handle increasing = smart money adjusting
+- Line moving toward underdog = market correcting
+
+## Sharp Signal Example
+
+```json
+{
+  "matchup": "Dallas Renegades @ Louisville Kings",
+  "participant1_handle_pct": 73,
+  "participant2_handle_pct": 27,
+  "participant1_bets_pct": 25,
+  "participant2_bets_pct": 75,
+  "p1_sharp_delta": 48,
+  "mr_vegas_flag": true
+}
+```
+
+**Interpretation:**
+
+- 73% of money on DAL (underdog at +114)
+- Only 25% of tickets on DAL
+- 48-point sharp delta = massive sharp divergence
+- Mr Vegas flag = DAL hit +180+ at some point
+- **Signal:** Sophisticated money is heavily backing DAL despite public loving LOU
+
+## Recommended Cron
+
+Run before key sports kickoff times:
+
+```cron
+# Run at 5pm and 7pm every Saturday and Sunday (before UFL/UFC)
+0 17,19 * * 6,7 cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league ufl
+
+# Or for UFC:
+0 17,19 * * 6,7 cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league ufc
+```
+
+This captures snapshots throughout the day, building a complete market movement history for analysis.
