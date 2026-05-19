@@ -1,7 +1,7 @@
 """Plot market movement over time for betting splits.
 
 Usage:
-    python plot_splits.py --league ufl --matchup "ST\L@HOU"
+    python plot_splits.py --league ufl --matchup "STL@HOU"
     python plot_splits.py --league ufl              # list all games
     python plot_splits.py --league ufl --all        # plot all games in one figure
 """
