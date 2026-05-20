@@ -18,8 +18,10 @@ import re
 import time
 from datetime import datetime, timezone, timedelta
 
+import boto3
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 # Import plotting function
 try:
@@ -28,11 +30,20 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+load_dotenv()
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s | %(message)s")
 log = logging.getLogger(__name__)
 
 FLARESOLVERR_URL = "http://localhost:8191/v1"
 OUTPUT_DIR       = "splits"
+AWS_REGION       = os.getenv("AWS_REGION", "us-east-1")
+SPLITS_S3_BUCKET = os.getenv("SPLITS_S3_BUCKET")
+
+if not SPLITS_S3_BUCKET:
+    raise ValueError("SPLITS_S3_BUCKET environment variable is required")
+
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 EVENT_GROUPS = {
     "ufl":  "212333",
@@ -274,6 +285,23 @@ def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odd
     return check_mr_vegas_flag(current_p1_odds, current_p2_odds)
 
 
+def upload_to_s3(filepath: str, league: str, filename: str) -> None:
+    """Upload a splits file to S3."""
+    s3_key = f"betting-splits/{league}/{os.path.basename(os.path.dirname(filepath))}/{filename}"
+    try:
+        with open(filepath, "rb") as f:
+            s3_client.put_object(
+                Bucket=SPLITS_S3_BUCKET,
+                Key=s3_key,
+                Body=f.read(),
+                ContentType="application/json"
+            )
+        log.info("Uploaded to s3://%s/%s", SPLITS_S3_BUCKET, s3_key)
+    except Exception as e:
+        log.error("Failed to upload to S3: %s", e)
+        raise
+
+
 def save_game(game: dict, league: str, dry_run: bool) -> str:
     date_str = parse_game_date(game["game_datetime"])
     sep      = "-vs-" if game["separator"].lower().startswith("v") else "@"
@@ -287,11 +315,11 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     # Load previous version to build history arrays and check mr_vegas history
     previous = load_previous_game(filepath)
     history = build_history_arrays(game, previous)
-    
+
     # Check mr_vegas flag with history — sticky flag
     mr_vegas_flag = check_mr_vegas_flag_with_history(
-        game["participant1_odds"], 
-        game["participant2_odds"], 
+        game["participant1_odds"],
+        game["participant2_odds"],
         previous
     )
 
@@ -315,7 +343,10 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
         os.makedirs(out_dir, exist_ok=True)
         with open(filepath, "w") as f:
             json.dump(record, f, indent=2)
-        
+
+        # Upload to S3
+        upload_to_s3(filepath, league, filename)
+
         # Auto-generate and save plot
         if HAS_MATPLOTLIB:
             plot_dir = os.path.join("plots", league)

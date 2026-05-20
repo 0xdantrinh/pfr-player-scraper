@@ -185,6 +185,73 @@ This keeps the parsing logic consistent with the NFL scraper.
 
 ---
 
+# Betting Splits (DraftKings Network)
+
+Capture and track betting splits (handle % and tickets %) from DraftKings Network for any sport.
+
+## Setup
+
+Add to your `.env`:
+
+```
+SPLITS_S3_BUCKET=moneyline-splits
+```
+
+## Capture Splits
+
+Run the capture script to fetch current active games:
+
+```bash
+python capture_betting_splits.py --league ufl
+```
+
+Supported leagues: `ufl`, `ufc`, `nfl`, `nba`, `mlb`
+
+**Output:**
+- Local: `splits/{league}/{YYYY-MM-DD}/{away}@{home}.json`
+- S3: `s3://moneyline-splits/betting-splits/{league}/{YYYY-MM-DD}/{away}@{home}.json`
+
+Each run updates the local file and uploads to S3. Historical arrays track market movement over time.
+
+### Features
+
+- **Market tracking**: Automatically maintains history arrays for handle %, bets %, and odds movement
+- **Sharp detection**: Calculates sharp action deltas (handle % - bets % spread)
+- **Mr Vegas flag**: Flags games where either participant has +180 or better odds (sticky flag persists once triggered)
+- **Auto-plotting**: Generates `plots/{league}/{away}@{home}.png` showing market movement (requires matplotlib)
+
+### Dry run
+
+```bash
+python capture_betting_splits.py --league ufl --dry-run
+```
+
+## Plot Market Movement
+
+List available games:
+
+```bash
+python plot_splits.py --league ufl
+```
+
+Plot a specific matchup:
+
+```bash
+python plot_splits.py --league ufl --matchup "STL@HOU"
+```
+
+### Sync from S3
+
+Prediction repos can pull the latest splits from S3:
+
+```bash
+python plot_splits.py --league ufl --sync-s3
+```
+
+This downloads all splits for the league from S3 before plotting. Useful for keeping prediction models in sync with the latest betting data.
+
+---
+
 # AWS Deployment
 
 ## 1 Build Docker Image

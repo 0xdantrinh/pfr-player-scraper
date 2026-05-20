@@ -4,6 +4,7 @@ Usage:
     python plot_splits.py --league ufl --matchup "STL@HOU"
     python plot_splits.py --league ufl              # list all games
     python plot_splits.py --league ufl --all        # plot all games in one figure
+    python plot_splits.py --league ufl --sync-s3    # sync latest from S3 first
 """
 
 import argparse
@@ -12,12 +13,20 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+import boto3
+from dotenv import load_dotenv
+
+load_dotenv()
+
 try:
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
 except ImportError:
     print("Error: matplotlib not installed. Install with: pip install matplotlib")
     exit(1)
+
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+SPLITS_S3_BUCKET = os.getenv("SPLITS_S3_BUCKET")
 
 
 def parse_odds(odds_str: str | int | None) -> int | None:
@@ -32,13 +41,55 @@ def parse_odds(odds_str: str | int | None) -> int | None:
         return None
 
 
+def sync_splits_from_s3(league: str) -> None:
+    """Sync splits files from S3 to local splits directory."""
+    if not SPLITS_S3_BUCKET:
+        print("Warning: SPLITS_S3_BUCKET not configured, skipping S3 sync")
+        return
+
+    try:
+        s3 = boto3.client("s3", region_name=AWS_REGION)
+        splits_dir = Path("splits") / league
+        splits_dir.mkdir(parents=True, exist_ok=True)
+
+        # List all objects in the S3 bucket for this league
+        paginator = s3.get_paginator("list_objects_v2")
+        pages = paginator.paginate(
+            Bucket=SPLITS_S3_BUCKET,
+            Prefix=f"betting-splits/{league}/"
+        )
+
+        count = 0
+        for page in pages:
+            if "Contents" not in page:
+                continue
+            for obj in page["Contents"]:
+                key = obj["Key"]
+                # Parse: betting-splits/{league}/{YYYY-MM-DD}/{filename}.json
+                parts = key.split("/")
+                if len(parts) >= 4:
+                    date_part = parts[2]
+                    filename = parts[3]
+                    local_path = splits_dir / date_part / filename
+                    local_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Download file
+                    s3.download_file(SPLITS_S3_BUCKET, key, str(local_path))
+                    count += 1
+
+        print(f"Synced {count} files from S3 for league: {league}")
+    except Exception as e:
+        print(f"Error syncing from S3: {e}")
+        raise
+
+
 def find_game_files(league: str) -> dict:
     """Find all game files for a league and return as dict."""
     splits_dir = Path("splits") / league
     if not splits_dir.exists():
         print(f"No splits directory found for league: {league}")
         return {}
-    
+
     games = {}
     for date_dir in splits_dir.iterdir():
         if not date_dir.is_dir():
@@ -48,7 +99,7 @@ def find_game_files(league: str) -> dict:
                 data = json.load(f)
             matchup = data.get("matchup", json_file.stem)
             games[matchup] = data
-    
+
     return games
 
 
@@ -147,8 +198,12 @@ def main():
     parser.add_argument("--league", default="ufl", help="League (ufl, ufc, nfl, etc.)")
     parser.add_argument("--matchup", help="Specific matchup to plot (e.g., 'STL@HOU')")
     parser.add_argument("--all", action="store_true", help="Plot all games (one per window)")
+    parser.add_argument("--sync-s3", action="store_true", help="Sync latest splits from S3 before plotting")
     args = parser.parse_args()
-    
+
+    if args.sync_s3:
+        sync_splits_from_s3(args.league)
+
     games = find_game_files(args.league)
     
     if not games:
