@@ -287,7 +287,7 @@ def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odd
 
 def upload_to_s3(filepath: str, league: str, filename: str) -> None:
     """Upload a splits file to S3."""
-    s3_key = f"betting-splits/{league}/{os.path.basename(os.path.dirname(filepath))}/{filename}"
+    s3_key = f"{league}/{os.path.basename(os.path.dirname(filepath))}/{filename}"
     try:
         with open(filepath, "rb") as f:
             s3_client.put_object(

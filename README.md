@@ -209,7 +209,7 @@ Supported leagues: `ufl`, `ufc`, `nfl`, `nba`, `mlb`
 
 **Output:**
 - Local: `splits/{league}/{YYYY-MM-DD}/{away}@{home}.json`
-- S3: `s3://moneyline-splits/betting-splits/{league}/{YYYY-MM-DD}/{away}@{home}.json`
+- S3: `s3://moneyline-splits/{league}/{YYYY-MM-DD}/{away}@{home}.json`
 
 Each run updates the local file and uploads to S3. Historical arrays track market movement over time.
 

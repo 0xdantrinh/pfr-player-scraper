@@ -56,7 +56,7 @@ def sync_splits_from_s3(league: str) -> None:
         paginator = s3.get_paginator("list_objects_v2")
         pages = paginator.paginate(
             Bucket=SPLITS_S3_BUCKET,
-            Prefix=f"betting-splits/{league}/"
+            Prefix=f"{league}/"
         )
 
         count = 0
@@ -65,11 +65,11 @@ def sync_splits_from_s3(league: str) -> None:
                 continue
             for obj in page["Contents"]:
                 key = obj["Key"]
-                # Parse: betting-splits/{league}/{YYYY-MM-DD}/{filename}.json
+                # Parse: {league}/{YYYY-MM-DD}/{filename}.json
                 parts = key.split("/")
-                if len(parts) >= 4:
-                    date_part = parts[2]
-                    filename = parts[3]
+                if len(parts) >= 3:
+                    date_part = parts[1]
+                    filename = parts[2]
                     local_path = splits_dir / date_part / filename
                     local_path.parent.mkdir(parents=True, exist_ok=True)
 
