@@ -8,47 +8,54 @@
   "game_datetime": "5/24, 07:00PM",
   "participant1_odds": "-162",
   "participant2_odds": "+136",
-  "participant1_handle_pct": 91,
-  "participant2_handle_pct": 9,
-  "participant1_bets_pct": 75,
-  "participant2_bets_pct": 25,
-  "p2_sharp_delta": -16,
-  "p1_sharp_delta": 16,
+  "participant1_handle_pct": 33,
+  "participant2_handle_pct": 67,
+  "participant1_bets_pct": 76,
+  "participant2_bets_pct": 24,
+  "p2_sharp_delta": 43,
+  "p1_sharp_delta": -43,
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-05-20T22:15:50.842456+00:00",
+  "captured_at": "2026-05-21T20:17:27.658122+00:00",
   "mr_vegas_flag": false,
   "participant1_handle_pct_history": [
     92,
     92,
-    91
+    91,
+    33
   ],
   "participant2_handle_pct_history": [
     8,
     8,
-    9
+    9,
+    67
   ],
   "participant1_bets_pct_history": [
     77,
     77,
-    75
+    75,
+    76
   ],
   "participant2_bets_pct_history": [
     23,
     23,
-    25
+    25,
+    24
   ],
   "p1_sharp_delta_history": [
     15,
     15,
-    16
+    16,
+    -43
   ],
   "p2_sharp_delta_history": [
     -15,
     -15,
-    -16
+    -16,
+    43
   ],
   "participant1_odds_history": [
+    "-162",
     "-162",
     "-162",
     "-162"
@@ -56,11 +63,13 @@
   "participant2_odds_history": [
     "+136",
     "+136",
+    "+136",
     "+136"
   ],
   "captured_at_history": [
     "2026-05-19T16:54:45.416328+00:00",
     "2026-05-19T17:09:42.772643+00:00",
-    "2026-05-20T22:15:50.842456+00:00"
+    "2026-05-20T22:15:50.842456+00:00",
+    "2026-05-21T20:17:27.658122+00:00"
   ]
 }
