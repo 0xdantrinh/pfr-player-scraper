@@ -1,0 +1,48 @@
+{
+  "matchup": "NY Knicks @ CLE Cavaliers",
+  "separator": "@",
+  "participant1": "NY Knicks",
+  "participant2": "CLE Cavaliers",
+  "participant1_slug": "knicks-ny",
+  "participant2_slug": "cavaliers-cle",
+  "game_datetime": "5/25, 08:10PM",
+  "participant1_odds": "-130",
+  "participant2_odds": "+110",
+  "participant1_handle_pct": 95,
+  "participant2_handle_pct": 5,
+  "participant1_bets_pct": 77,
+  "participant2_bets_pct": 23,
+  "p2_sharp_delta": -18,
+  "p1_sharp_delta": 18,
+  "league": "nba",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-24T16:50:55.159058+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    95
+  ],
+  "participant2_handle_pct_history": [
+    5
+  ],
+  "participant1_bets_pct_history": [
+    77
+  ],
+  "participant2_bets_pct_history": [
+    23
+  ],
+  "p1_sharp_delta_history": [
+    18
+  ],
+  "p2_sharp_delta_history": [
+    -18
+  ],
+  "participant1_odds_history": [
+    "-130"
+  ],
+  "participant2_odds_history": [
+    "+110"
+  ],
+  "captured_at_history": [
+    "2026-05-24T16:50:55.159058+00:00"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "matchup": "OKC Thunder @ SA Spurs",
+  "separator": "@",
+  "participant1": "OKC Thunder",
+  "participant2": "SA Spurs",
+  "participant1_slug": "thunder-okc",
+  "participant2_slug": "spurs-sa",
+  "game_datetime": "5/24, 08:10PM",
+  "participant1_odds": "+124",
+  "participant2_odds": "-148",
+  "participant1_handle_pct": 45,
+  "participant2_handle_pct": 55,
+  "participant1_bets_pct": 44,
+  "participant2_bets_pct": 56,
+  "p2_sharp_delta": -1,
+  "p1_sharp_delta": 1,
+  "league": "nba",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-24T16:50:53.004035+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    45
+  ],
+  "participant2_handle_pct_history": [
+    55
+  ],
+  "participant1_bets_pct_history": [
+    44
+  ],
+  "participant2_bets_pct_history": [
+    56
+  ],
+  "p1_sharp_delta_history": [
+    1
+  ],
+  "p2_sharp_delta_history": [
+    -1
+  ],
+  "participant1_odds_history": [
+    "+124"
+  ],
+  "participant2_odds_history": [
+    "-148"
+  ],
+  "captured_at_history": [
+    "2026-05-24T16:50:53.004035+00:00"
+  ]
+}
