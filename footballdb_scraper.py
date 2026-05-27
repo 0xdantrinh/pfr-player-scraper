@@ -181,6 +181,33 @@ RUSHING_COLS = [
     "fumbles", "fumbles_lost",
 ]
 
+# Defense table — footballdb headers: Year | Lg | Team | G | GS | Int | Yds | Avg | Lg | TD | Solo | Ast | Tot | Sack | YdsL | PD | QBH
+DEFENSE_COLS = [
+    "year_id", "league", "team",
+    "games", "games_started",
+    "interceptions", "int_yards", "int_avg", "int_longest", "int_touchdowns",
+    "tackles_solo", "tackles_assist", "tackles_total",
+    "sacks", "sack_yards",
+    "passes_defended", "qb_hits",
+]
+
+# Kickoff Returns: Year | Lg | Team | G | GS | KR | Yds | Avg | Lg | TD
+KICKOFF_RETURN_COLS = [
+    "year_id", "league", "team",
+    "games", "games_started",
+    "kick_returns", "kick_return_yards", "kick_return_avg",
+    "kick_return_longest", "kick_return_touchdowns",
+]
+
+# Punt Returns: Year | Lg | Team | G | GS | PR | Yds | Avg | Lg | TD | FC
+PUNT_RETURN_COLS = [
+    "year_id", "league", "team",
+    "games", "games_started",
+    "punt_returns", "punt_return_yards", "punt_return_avg",
+    "punt_return_longest", "punt_return_touchdowns",
+    "fair_catches",
+]
+
 
 def _row_to_dict(cells: list[str], cols: list[str]) -> dict:
     """Map a parsed row's cells onto column names by index. Excess cells are
@@ -346,8 +373,14 @@ def parse_page(html: str, url: str) -> dict:
     info   = _extract_player_info(soup)
     awards = _extract_awards(soup)
 
-    passing_tbl = _find_stats_table(soup, "Passing")
-    rushing_tbl = _find_stats_table(soup, "Rushing")
+    passing_tbl       = _find_stats_table(soup, "Passing")
+    rushing_tbl       = _find_stats_table(soup, "Rushing")
+    # Defense stats tables on footballdb don't say "Defense" in the first row —
+    # the column-group header band reads "Interceptions Tackles Sacks Misc".
+    # Match on a unique column-group keyword instead.
+    defense_tbl       = _find_stats_table(soup, "Interceptions Tackles")
+    kick_return_tbl   = _find_stats_table(soup, "Kickoff Returns")
+    punt_return_tbl   = _find_stats_table(soup, "Punt Returns")
 
     return {
         "footballdb_id": fdb_id,
@@ -356,8 +389,11 @@ def parse_page(html: str, url: str) -> dict:
         "player_info":   info,
         "awards":        awards,
         "stats": {
-            "passing": _parse_stats_table(passing_tbl, PASSING_COLS) if passing_tbl else [],
-            "rushing": _parse_stats_table(rushing_tbl, RUSHING_COLS) if rushing_tbl else [],
+            "passing":        _parse_stats_table(passing_tbl,     PASSING_COLS)        if passing_tbl     else [],
+            "rushing":        _parse_stats_table(rushing_tbl,     RUSHING_COLS)        if rushing_tbl     else [],
+            "defense":        _parse_stats_table(defense_tbl,     DEFENSE_COLS)        if defense_tbl     else [],
+            "kick_returns":   _parse_stats_table(kick_return_tbl, KICKOFF_RETURN_COLS) if kick_return_tbl else [],
+            "punt_returns":   _parse_stats_table(punt_return_tbl, PUNT_RETURN_COLS)    if punt_return_tbl else [],
         },
         "source": "footballdb",
     }
