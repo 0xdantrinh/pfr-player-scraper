@@ -39,12 +39,19 @@ def _name_matches_pfr_id(name: str, pfr_id: str) -> bool:
     if '-' in pfr_id:
         return True
     last_frag  = pfr_id[:4].lower()
-    first_frag = pfr_id[4:6].lower()
-    name_lower = name.lower().replace("-", "").replace("'", "").replace(".", "")
+    first_frag = pfr_id[4:6].lower().replace(".", "")  # C.J./T.J. → "c"/"t" not "c."/"t."
+    # Replace hyphen with space so "Jones-Drew" → ["jones", "drew"], not ["jonesdrew"]
+    name_lower = name.lower().replace("'", "").replace(".", "")
+    name_lower = name_lower.replace("-", " ")
     parts      = name_lower.split()
-    last_ok    = any(p.startswith(last_frag) for p in parts)
+    # last_frag check: also handle x-padded short last names (Cox→Coxx, Nix→Nixx)
+    # p.startswith(last_frag) handles normal case; last_frag.startswith(p) handles padding
+    last_ok    = any(p.startswith(last_frag) or last_frag.startswith(p) for p in parts)
     first_ok   = any(p.startswith(first_frag) for p in parts)
-    return last_ok and first_ok
+    # Accept if EITHER fragment matches — handles legal name changes (Davis→Williams)
+    # and nicknames (Beanie Wells). The pfr_id URL is already the unique key; this check
+    # is only a guard against Cloudflare serving a cached wrong-player page.
+    return last_ok or first_ok
 
 
 def process_message(msg):
