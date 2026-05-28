@@ -24,7 +24,7 @@ SESSION_ROTATE_EVERY   = int(os.environ.get("SESSION_ROTATE_EVERY", "150"))
 FLARESOLVERR_CONTAINER = os.environ.get("FLARESOLVERR_CONTAINER", "flaresolverr")
 # After a docker restart, sleep this many seconds before the next request.
 # Gives Cloudflare's IP rate-limit time to relax between recovery attempts.
-POST_RESTART_SLEEP = int(os.environ.get("POST_RESTART_SLEEP", "15"))
+POST_RESTART_SLEEP = int(os.environ.get("POST_RESTART_SLEEP", "3"))
 # Normal inter-request delay range (seconds). Increase if hitting rate limits.
 DELAY_MIN = float(os.environ.get("DELAY_MIN", "3.0"))
 DELAY_MAX = float(os.environ.get("DELAY_MAX", "8.0"))
