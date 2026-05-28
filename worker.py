@@ -4,8 +4,9 @@ import json
 import time
 import logging
 import random
+import requests
 import boto3
-from scraper import fetch_page, parse_page, PageNotFoundError
+from scraper import fetch_page, parse_page, PageNotFoundError, FLARESOLVERR_URL, PFR_SESSION, CFB_SESSION
 from cfb_scraper import parse_page as parse_cfb_page
 
 load_dotenv()
@@ -15,6 +16,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 SQS_URL = os.environ.get("SQS_QUEUE_URL")
 S3_BUCKET = os.environ.get("S3_BUCKET")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+
+# Rotate FlareSolverr sessions every N successful scrapes to prevent Cloudflare
+# cookie poisoning (accumulated cf_clearance cookies get flagged after ~100-200 requests).
+SESSION_ROTATE_EVERY = int(os.environ.get("SESSION_ROTATE_EVERY", "150"))
+# Error threshold: rotate immediately after this many consecutive failures
+SESSION_ERROR_THRESHOLD = int(os.environ.get("SESSION_ERROR_THRESHOLD", "3"))
 
 if not SQS_URL:
     raise ValueError("SQS_QUEUE_URL environment variable is required")
@@ -157,8 +164,25 @@ def process_message(msg):
     logging.info(f"Uploaded {key}")
 
 
+def _rotate_sessions():
+    """Destroy PFR and CFB FlareSolverr sessions so the next fetch gets a fresh Chrome instance."""
+    for session in (PFR_SESSION, CFB_SESSION):
+        try:
+            requests.post(
+                FLARESOLVERR_URL,
+                json={"cmd": "sessions.destroy", "session": session},
+                timeout=15,
+            )
+        except Exception as e:
+            logging.warning("Session rotation failed for '%s' (non-fatal): %s", session, e)
+    logging.info("Sessions rotated (%s, %s) — fresh Chrome on next request", PFR_SESSION, CFB_SESSION)
+
+
 def loop():
-    logging.info("Starting worker loop...")
+    logging.info("Starting worker loop... (session rotation every %d messages)", SESSION_ROTATE_EVERY)
+    messages_processed = 0
+    consecutive_errors  = 0
+
     while True:
         resp = sqs.receive_message(
             QueueUrl=SQS_URL,
@@ -182,15 +206,31 @@ def loop():
                     ReceiptHandle=m["ReceiptHandle"]
                 )
 
+                messages_processed += 1
+                consecutive_errors  = 0
+
+                if messages_processed % SESSION_ROTATE_EVERY == 0:
+                    logging.info("Rotating sessions after %d messages", messages_processed)
+                    _rotate_sessions()
+
             except PageNotFoundError as e:
-                # 404 pages are expected for wrong disambiguation suffixes — discard quietly
+                # 404s are expected for wrong disambiguation suffixes — discard quietly
                 logging.debug(f"404 skip: {e}")
                 sqs.delete_message(
                     QueueUrl=SQS_URL,
                     ReceiptHandle=m["ReceiptHandle"]
                 )
+                consecutive_errors = 0  # 404s are not FlareSolverr failures
+
             except Exception as e:
                 logging.error(f"Error processing message: {e}", exc_info=True)
+                consecutive_errors += 1
+                if consecutive_errors >= SESSION_ERROR_THRESHOLD:
+                    logging.warning(
+                        "%d consecutive errors — rotating sessions immediately", consecutive_errors
+                    )
+                    _rotate_sessions()
+                    consecutive_errors = 0
 
         time.sleep(random.uniform(0.5, 2.0))
 
