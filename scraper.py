@@ -29,15 +29,7 @@ def fetch_page(url):
         "maxTimeout": 120000
     }
 
-    last_exc=None
-    for attempt in range(3):
-        try:
-            r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10,120))
-            break
-        except Exception as e:
-            last_exc=e
-            if attempt==2: raise
-            time.sleep(5)
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 130))
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
