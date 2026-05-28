@@ -1,0 +1,48 @@
+{
+  "matchup": "Meng Ding vs Jose Henrique",
+  "separator": "vs",
+  "participant1": "Meng Ding",
+  "participant2": "Jose Henrique",
+  "participant1_slug": "ding-meng",
+  "participant2_slug": "henrique-jose",
+  "game_datetime": "5/30, 06:30AM",
+  "participant1_odds": "-120",
+  "participant2_odds": "+100",
+  "participant1_handle_pct": 64,
+  "participant2_handle_pct": 36,
+  "participant1_bets_pct": 74,
+  "participant2_bets_pct": 26,
+  "p2_sharp_delta": 10,
+  "p1_sharp_delta": -10,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:36.873769+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    64
+  ],
+  "participant2_handle_pct_history": [
+    36
+  ],
+  "participant1_bets_pct_history": [
+    74
+  ],
+  "participant2_bets_pct_history": [
+    26
+  ],
+  "p1_sharp_delta_history": [
+    -10
+  ],
+  "p2_sharp_delta_history": [
+    10
+  ],
+  "participant1_odds_history": [
+    "-120"
+  ],
+  "participant2_odds_history": [
+    "+100"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:36.873769+00:00"
+  ]
+}

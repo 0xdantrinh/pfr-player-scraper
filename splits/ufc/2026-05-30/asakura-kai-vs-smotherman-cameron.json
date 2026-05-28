@@ -1,0 +1,48 @@
+{
+  "matchup": "Kai Asakura vs Cameron Smotherman",
+  "separator": "vs",
+  "participant1": "Kai Asakura",
+  "participant2": "Cameron Smotherman",
+  "participant1_slug": "asakura-kai",
+  "participant2_slug": "smotherman-cameron",
+  "game_datetime": "5/30, 08:15AM",
+  "participant1_odds": "-298",
+  "participant2_odds": "+240",
+  "participant1_handle_pct": 80,
+  "participant2_handle_pct": 20,
+  "participant1_bets_pct": 90,
+  "participant2_bets_pct": 10,
+  "p2_sharp_delta": 10,
+  "p1_sharp_delta": -10,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:38.967359+00:00",
+  "mr_vegas_flag": true,
+  "participant1_handle_pct_history": [
+    80
+  ],
+  "participant2_handle_pct_history": [
+    20
+  ],
+  "participant1_bets_pct_history": [
+    90
+  ],
+  "participant2_bets_pct_history": [
+    10
+  ],
+  "p1_sharp_delta_history": [
+    -10
+  ],
+  "p2_sharp_delta_history": [
+    10
+  ],
+  "participant1_odds_history": [
+    "-298"
+  ],
+  "participant2_odds_history": [
+    "+240"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:38.967359+00:00"
+  ]
+}

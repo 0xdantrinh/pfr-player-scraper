@@ -1,0 +1,48 @@
+{
+  "matchup": "Dallas Renegades @ St. Louis Battlehawks",
+  "separator": "@",
+  "participant1": "Dallas Renegades",
+  "participant2": "St. Louis Battlehawks",
+  "participant1_slug": "DAL",
+  "participant2_slug": "STL",
+  "game_datetime": "5/29, 08:00PM",
+  "participant1_odds": "+160",
+  "participant2_odds": "-192",
+  "participant1_handle_pct": 17,
+  "participant2_handle_pct": 83,
+  "participant1_bets_pct": 4,
+  "participant2_bets_pct": 96,
+  "p2_sharp_delta": -13,
+  "p1_sharp_delta": 13,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T00:48:12.198472+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    17
+  ],
+  "participant2_handle_pct_history": [
+    83
+  ],
+  "participant1_bets_pct_history": [
+    4
+  ],
+  "participant2_bets_pct_history": [
+    96
+  ],
+  "p1_sharp_delta_history": [
+    13
+  ],
+  "p2_sharp_delta_history": [
+    -13
+  ],
+  "participant1_odds_history": [
+    "+160"
+  ],
+  "participant2_odds_history": [
+    "-192"
+  ],
+  "captured_at_history": [
+    "2026-05-28T00:48:12.198472+00:00"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "matchup": "Houston Gamblers @ Birmingham Stallions",
+  "separator": "@",
+  "participant1": "Houston Gamblers",
+  "participant2": "Birmingham Stallions",
+  "participant1_slug": "HOU",
+  "participant2_slug": "BHM",
+  "game_datetime": "5/30, 03:00PM",
+  "participant1_odds": "+136",
+  "participant2_odds": "-162",
+  "participant1_handle_pct": 35,
+  "participant2_handle_pct": 65,
+  "participant1_bets_pct": 15,
+  "participant2_bets_pct": 85,
+  "p2_sharp_delta": -20,
+  "p1_sharp_delta": 20,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T00:48:14.415475+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    35
+  ],
+  "participant2_handle_pct_history": [
+    65
+  ],
+  "participant1_bets_pct_history": [
+    15
+  ],
+  "participant2_bets_pct_history": [
+    85
+  ],
+  "p1_sharp_delta_history": [
+    20
+  ],
+  "p2_sharp_delta_history": [
+    -20
+  ],
+  "participant1_odds_history": [
+    "+136"
+  ],
+  "participant2_odds_history": [
+    "-162"
+  ],
+  "captured_at_history": [
+    "2026-05-28T00:48:14.415475+00:00"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "matchup": "Yi Sak Lee vs Luis Felipe Dias",
+  "separator": "vs",
+  "participant1": "Yi Sak Lee",
+  "participant2": "Luis Felipe Dias",
+  "participant1_slug": "lee-sak-yi",
+  "participant2_slug": "dias-felipe-luis",
+  "game_datetime": "5/30, 06:45AM",
+  "participant1_odds": "+150",
+  "participant2_odds": "-180",
+  "participant1_handle_pct": 12,
+  "participant2_handle_pct": 88,
+  "participant1_bets_pct": 26,
+  "participant2_bets_pct": 74,
+  "p2_sharp_delta": 14,
+  "p1_sharp_delta": -14,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:37.373551+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    12
+  ],
+  "participant2_handle_pct_history": [
+    88
+  ],
+  "participant1_bets_pct_history": [
+    26
+  ],
+  "participant2_bets_pct_history": [
+    74
+  ],
+  "p1_sharp_delta_history": [
+    -14
+  ],
+  "p2_sharp_delta_history": [
+    14
+  ],
+  "participant1_odds_history": [
+    "+150"
+  ],
+  "participant2_odds_history": [
+    "-180"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:37.373551+00:00"
+  ]
+}

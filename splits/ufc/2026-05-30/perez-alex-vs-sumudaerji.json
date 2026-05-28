@@ -1,0 +1,48 @@
+{
+  "matchup": "Alex Perez vs Sumudaerji",
+  "separator": "vs",
+  "participant1": "Alex Perez",
+  "participant2": "Sumudaerji",
+  "participant1_slug": "perez-alex",
+  "participant2_slug": "sumudaerji",
+  "game_datetime": "5/30, 07:15AM",
+  "participant1_odds": "-142",
+  "participant2_odds": "+120",
+  "participant1_handle_pct": 42,
+  "participant2_handle_pct": 58,
+  "participant1_bets_pct": 59,
+  "participant2_bets_pct": 41,
+  "p2_sharp_delta": 17,
+  "p1_sharp_delta": -17,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:37.946479+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    42
+  ],
+  "participant2_handle_pct_history": [
+    58
+  ],
+  "participant1_bets_pct_history": [
+    59
+  ],
+  "participant2_bets_pct_history": [
+    41
+  ],
+  "p1_sharp_delta_history": [
+    -17
+  ],
+  "p2_sharp_delta_history": [
+    17
+  ],
+  "participant1_odds_history": [
+    "-142"
+  ],
+  "participant2_odds_history": [
+    "+120"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:37.946479+00:00"
+  ]
+}

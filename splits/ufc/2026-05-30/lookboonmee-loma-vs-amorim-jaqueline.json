@@ -1,0 +1,48 @@
+{
+  "matchup": "Loma Lookboonmee vs Jaqueline Amorim",
+  "separator": "vs",
+  "participant1": "Loma Lookboonmee",
+  "participant2": "Jaqueline Amorim",
+  "participant1_slug": "lookboonmee-loma",
+  "participant2_slug": "amorim-jaqueline",
+  "game_datetime": "5/30, 04:15AM",
+  "participant1_odds": "+102",
+  "participant2_odds": "-122",
+  "participant1_handle_pct": 49,
+  "participant2_handle_pct": 51,
+  "participant1_bets_pct": 43,
+  "participant2_bets_pct": 57,
+  "p2_sharp_delta": -6,
+  "p1_sharp_delta": 6,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:33.682165+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    49
+  ],
+  "participant2_handle_pct_history": [
+    51
+  ],
+  "participant1_bets_pct_history": [
+    43
+  ],
+  "participant2_bets_pct_history": [
+    57
+  ],
+  "p1_sharp_delta_history": [
+    6
+  ],
+  "p2_sharp_delta_history": [
+    -6
+  ],
+  "participant1_odds_history": [
+    "+102"
+  ],
+  "participant2_odds_history": [
+    "-122"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:33.682165+00:00"
+  ]
+}

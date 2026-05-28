@@ -1,0 +1,48 @@
+{
+  "matchup": "Kangjie Zhu vs Rodrigo Vera",
+  "separator": "vs",
+  "participant1": "Kangjie Zhu",
+  "participant2": "Rodrigo Vera",
+  "participant1_slug": "zhu-kangjie",
+  "participant2_slug": "vera-rodrigo",
+  "game_datetime": "5/30, 04:45AM",
+  "participant1_odds": "-105",
+  "participant2_odds": "-115",
+  "participant1_handle_pct": 64,
+  "participant2_handle_pct": 36,
+  "participant1_bets_pct": 46,
+  "participant2_bets_pct": 54,
+  "p2_sharp_delta": -18,
+  "p1_sharp_delta": 18,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:34.783828+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    64
+  ],
+  "participant2_handle_pct_history": [
+    36
+  ],
+  "participant1_bets_pct_history": [
+    46
+  ],
+  "participant2_bets_pct_history": [
+    54
+  ],
+  "p1_sharp_delta_history": [
+    18
+  ],
+  "p2_sharp_delta_history": [
+    -18
+  ],
+  "participant1_odds_history": [
+    "-105"
+  ],
+  "participant2_odds_history": [
+    "-115"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:34.783828+00:00"
+  ]
+}

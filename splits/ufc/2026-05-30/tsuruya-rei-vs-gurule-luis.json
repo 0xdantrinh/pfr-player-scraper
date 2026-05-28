@@ -1,0 +1,48 @@
+{
+  "matchup": "Rei Tsuruya vs Luis Gurule",
+  "separator": "vs",
+  "participant1": "Rei Tsuruya",
+  "participant2": "Luis Gurule",
+  "participant1_slug": "tsuruya-rei",
+  "participant2_slug": "gurule-luis",
+  "game_datetime": "5/30, 05:45AM",
+  "participant1_odds": "-230",
+  "participant2_odds": "+190",
+  "participant1_handle_pct": 64,
+  "participant2_handle_pct": 36,
+  "participant1_bets_pct": 85,
+  "participant2_bets_pct": 15,
+  "p2_sharp_delta": 21,
+  "p1_sharp_delta": -21,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:35.848195+00:00",
+  "mr_vegas_flag": true,
+  "participant1_handle_pct_history": [
+    64
+  ],
+  "participant2_handle_pct_history": [
+    36
+  ],
+  "participant1_bets_pct_history": [
+    85
+  ],
+  "participant2_bets_pct_history": [
+    15
+  ],
+  "p1_sharp_delta_history": [
+    -21
+  ],
+  "p2_sharp_delta_history": [
+    21
+  ],
+  "participant1_odds_history": [
+    "-230"
+  ],
+  "participant2_odds_history": [
+    "+190"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:35.848195+00:00"
+  ]
+}

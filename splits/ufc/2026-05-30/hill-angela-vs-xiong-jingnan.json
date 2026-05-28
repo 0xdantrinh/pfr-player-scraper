@@ -1,0 +1,48 @@
+{
+  "matchup": "Angela Hill vs Jingnan Xiong",
+  "separator": "vs",
+  "participant1": "Angela Hill",
+  "participant2": "Jingnan Xiong",
+  "participant1_slug": "hill-angela",
+  "participant2_slug": "xiong-jingnan",
+  "game_datetime": "5/30, 05:15AM",
+  "participant1_odds": "+170",
+  "participant2_odds": "-205",
+  "participant1_handle_pct": 23,
+  "participant2_handle_pct": 77,
+  "participant1_bets_pct": 21,
+  "participant2_bets_pct": 79,
+  "p2_sharp_delta": -2,
+  "p1_sharp_delta": 2,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-28T01:13:35.329229+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    23
+  ],
+  "participant2_handle_pct_history": [
+    77
+  ],
+  "participant1_bets_pct_history": [
+    21
+  ],
+  "participant2_bets_pct_history": [
+    79
+  ],
+  "p1_sharp_delta_history": [
+    2
+  ],
+  "p2_sharp_delta_history": [
+    -2
+  ],
+  "participant1_odds_history": [
+    "+170"
+  ],
+  "participant2_odds_history": [
+    "-205"
+  ],
+  "captured_at_history": [
+    "2026-05-28T01:13:35.329229+00:00"
+  ]
+}
