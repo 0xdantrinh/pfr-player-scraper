@@ -28,6 +28,12 @@ SESSION_ERROR_THRESHOLD = int(os.environ.get("SESSION_ERROR_THRESHOLD", "3"))
 # that Cloudflare continues to flag. docker restart kills the process tree entirely.
 DOCKER_RESTART_THRESHOLD = int(os.environ.get("DOCKER_RESTART_THRESHOLD", "5"))
 FLARESOLVERR_CONTAINER   = os.environ.get("FLARESOLVERR_CONTAINER", "flaresolverr")
+# After a docker restart, sleep this many seconds before the next request.
+# Gives Cloudflare's IP rate-limit time to relax between recovery attempts.
+POST_RESTART_SLEEP = int(os.environ.get("POST_RESTART_SLEEP", "300"))
+# Normal inter-request delay range (seconds). Increase if hitting rate limits.
+DELAY_MIN = float(os.environ.get("DELAY_MIN", "3.0"))
+DELAY_MAX = float(os.environ.get("DELAY_MAX", "8.0"))
 
 if not SQS_URL:
     raise ValueError("SQS_QUEUE_URL environment variable is required")
@@ -196,9 +202,10 @@ def _restart_flaresolverr():
             ["docker", "restart", FLARESOLVERR_CONTAINER],
             check=True, capture_output=True, timeout=30,
         )
-        # Give FlareSolverr time to come back up and Chrome to initialize
-        time.sleep(8)
-        logging.info("FlareSolverr restarted successfully")
+        # Give FlareSolverr time to come back up, then sleep to let Cloudflare
+        # IP rate-limit relax before the next request.
+        logging.info("FlareSolverr restarted — sleeping %ds before next request", POST_RESTART_SLEEP)
+        time.sleep(POST_RESTART_SLEEP)
     except Exception as e:
         logging.error("docker restart failed (non-fatal): %s", e)
 
@@ -276,7 +283,7 @@ def loop():
                     consecutive_errors = 0
                     # post_rotate_errors intentionally NOT reset — tracks escalation
 
-        time.sleep(random.uniform(0.5, 2.0))
+        time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))
 
 
 if __name__ == "__main__":
