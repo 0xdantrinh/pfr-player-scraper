@@ -94,22 +94,25 @@ def find_game_files(league: str) -> dict:
     for date_dir in splits_dir.iterdir():
         if not date_dir.is_dir():
             continue
+        date_str = date_dir.name
         for json_file in date_dir.glob("*.json"):
             with open(json_file) as f:
                 data = json.load(f)
+            data["_game_date"] = date_str
             matchup = data.get("matchup", json_file.stem)
             games[matchup] = data
 
     return games
 
 
-def plot_game(game_data: dict, show: bool = True, save_path: str | None = None) -> None:
+def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: str | None = None) -> None:
     """Plot market movement for a single game.
-    
+
     Args:
         game_data: Game data dict from JSON
+        league: League name for organizing plots by date
         show: Whether to display the plot
-        save_path: Optional path to save the plot as PNG (e.g., "plots/ufl/STL@HOU.png")
+        save_path: Optional path to save the plot as PNG
     """
     matchup = game_data.get("matchup", "Game")
     p1_name = game_data.get("participant1_slug", "P1")
@@ -182,8 +185,11 @@ def plot_game(game_data: dict, show: bool = True, save_path: str | None = None) 
         ax3.tick_params(axis="x", rotation=45)
     
     plt.tight_layout()
-    
-    if save_path:
+
+    if save_path or league:
+        if not save_path and league:
+            game_date = game_data.get("_game_date", "")
+            save_path = f"plots/{league}/{game_date}/{matchup}.png"
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=100, bbox_inches="tight")
         plt.close()
@@ -218,11 +224,11 @@ def main():
             print(f"Available games: {list(games.keys())}")
             return
         game = games[matching[0]]
-        plot_game(game, show=True)
+        plot_game(game, league=args.league, show=True)
     elif args.all:
         # Plot all games
         for matchup, game_data in games.items():
-            plot_game(game_data, show=False)
+            plot_game(game_data, league=args.league, show=False)
         plt.show()
     else:
         # List available games
