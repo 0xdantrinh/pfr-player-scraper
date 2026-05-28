@@ -20,14 +20,8 @@ AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 # Rotate FlareSolverr sessions every N successful scrapes to prevent Cloudflare
 # cookie poisoning (accumulated cf_clearance cookies get flagged after ~100-200 requests).
-SESSION_ROTATE_EVERY = int(os.environ.get("SESSION_ROTATE_EVERY", "150"))
-# Level-1 recovery: destroy sessions after this many consecutive failures (fast, ~10s)
-SESSION_ERROR_THRESHOLD = int(os.environ.get("SESSION_ERROR_THRESHOLD", "3"))
-# Level-2 recovery: full docker restart if still failing after another N errors post-rotation
-# sessions.destroy only clears cookies; the Chrome process can carry a stale TLS fingerprint
-# that Cloudflare continues to flag. docker restart kills the process tree entirely.
-DOCKER_RESTART_THRESHOLD = int(os.environ.get("DOCKER_RESTART_THRESHOLD", "5"))
-FLARESOLVERR_CONTAINER   = os.environ.get("FLARESOLVERR_CONTAINER", "flaresolverr")
+SESSION_ROTATE_EVERY   = int(os.environ.get("SESSION_ROTATE_EVERY", "150"))
+FLARESOLVERR_CONTAINER = os.environ.get("FLARESOLVERR_CONTAINER", "flaresolverr")
 # After a docker restart, sleep this many seconds before the next request.
 # Gives Cloudflare's IP rate-limit time to relax between recovery attempts.
 POST_RESTART_SLEEP = int(os.environ.get("POST_RESTART_SLEEP", "300"))
@@ -176,34 +170,18 @@ def process_message(msg):
     logging.info(f"Uploaded {key}")
 
 
-def _rotate_sessions():
-    """Level-1 recovery: destroy PFR and CFB sessions — clears cookies, same Chrome process."""
-    for session in (PFR_SESSION, CFB_SESSION):
-        try:
-            requests.post(
-                FLARESOLVERR_URL,
-                json={"cmd": "sessions.destroy", "session": session},
-                timeout=15,
-            )
-        except Exception as e:
-            logging.warning("Session rotation failed for '%s' (non-fatal): %s", session, e)
-    logging.info("Sessions rotated (%s, %s) — fresh cookies on next request", PFR_SESSION, CFB_SESSION)
-
-
 def _restart_flaresolverr():
-    """Level-2 recovery: full docker restart — kills Chrome process tree, new TLS fingerprint.
+    """Restart the FlareSolverr container — kills Chrome process tree, fresh fingerprint.
 
-    Used when sessions.destroy isn't enough (e.g. Chrome carrying a stale fingerprint
-    that Cloudflare continues to block even with fresh cookies).
+    Called immediately on the first FlareSolverr failure. Each challenge timeout wastes
+    120 seconds, so there's no value in retrying before restarting.
     """
-    logging.warning("Restarting FlareSolverr container '%s' ...", FLARESOLVERR_CONTAINER)
+    logging.warning("FlareSolverr error — restarting container '%s' ...", FLARESOLVERR_CONTAINER)
     try:
         subprocess.run(
             ["docker", "restart", FLARESOLVERR_CONTAINER],
             check=True, capture_output=True, timeout=30,
         )
-        # Give FlareSolverr time to come back up, then sleep to let Cloudflare
-        # IP rate-limit relax before the next request.
         logging.info("FlareSolverr restarted — sleeping %ds before next request", POST_RESTART_SLEEP)
         time.sleep(POST_RESTART_SLEEP)
     except Exception as e:
@@ -211,13 +189,8 @@ def _restart_flaresolverr():
 
 
 def loop():
-    logging.info(
-        "Starting worker loop... (rotate every %d ok, L1 after %d errors, L2 after %d post-rotate errors)",
-        SESSION_ROTATE_EVERY, SESSION_ERROR_THRESHOLD, DOCKER_RESTART_THRESHOLD,
-    )
-    messages_processed    = 0
-    consecutive_errors     = 0
-    post_rotate_errors     = 0   # errors AFTER a level-1 rotation (escalation counter)
+    logging.info("Starting worker loop... (session rotate every %d ok, restart on first error)", SESSION_ROTATE_EVERY)
+    messages_processed = 0
 
     while True:
         resp = sqs.receive_message(
@@ -243,45 +216,27 @@ def loop():
                 )
 
                 messages_processed += 1
-                consecutive_errors  = 0
-                post_rotate_errors  = 0
-
                 if messages_processed % SESSION_ROTATE_EVERY == 0:
                     logging.info("Rotating sessions after %d messages", messages_processed)
-                    _rotate_sessions()
+                    for session in (PFR_SESSION, CFB_SESSION):
+                        try:
+                            requests.post(FLARESOLVERR_URL,
+                                          json={"cmd": "sessions.destroy", "session": session},
+                                          timeout=15)
+                        except Exception:
+                            pass
 
             except PageNotFoundError as e:
-                # 404s are expected for wrong disambiguation suffixes — discard quietly
+                # 404s are expected — discard quietly without restarting
                 logging.debug(f"404 skip: {e}")
                 sqs.delete_message(
                     QueueUrl=SQS_URL,
                     ReceiptHandle=m["ReceiptHandle"]
                 )
-                consecutive_errors = 0
-                post_rotate_errors = 0
 
             except Exception as e:
                 logging.error(f"Error processing message: {e}", exc_info=True)
-                consecutive_errors += 1
-                post_rotate_errors += 1
-
-                if post_rotate_errors >= DOCKER_RESTART_THRESHOLD:
-                    # Level-2: session destroy isn't cutting it — restart the container
-                    logging.warning(
-                        "%d errors since last rotation — escalating to docker restart",
-                        post_rotate_errors,
-                    )
-                    _restart_flaresolverr()
-                    post_rotate_errors = 0
-                    consecutive_errors = 0
-                elif consecutive_errors >= SESSION_ERROR_THRESHOLD:
-                    # Level-1: destroy sessions, get fresh cookies
-                    logging.warning(
-                        "%d consecutive errors — rotating sessions (level 1)", consecutive_errors
-                    )
-                    _rotate_sessions()
-                    consecutive_errors = 0
-                    # post_rotate_errors intentionally NOT reset — tracks escalation
+                _restart_flaresolverr()
 
         time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))
 
