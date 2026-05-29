@@ -120,19 +120,19 @@ def process_message(msg):
                     f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
                 )
                 return
-            is_skill_receiver = any(p in scraped_pos for p in ("WR", "TE", "RB", "WIDE", "TIGHT", "RUNNING"))
-            # Infer receiver from stats when position absent: has receiving or return stats but no passing
-            if is_skill_receiver or (not passing_rows and (receiving_rows or return_rows)):
-                if not receiving_rows and not return_rows:
+            is_skill_player = any(p in scraped_pos for p in ("WR", "TE", "RB", "WIDE", "TIGHT", "RUNNING"))
+            # Infer skill player from stats when position absent
+            if is_skill_player or (not passing_rows and (receiving_rows or return_rows or rushing_rows)):
+                if not receiving_rows and not return_rows and not rushing_rows:
                     logging.warning(
-                        f"SKIP {key}: no receiving or return stats for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no rushing, receiving, or return stats for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
             else:
                 # QB / default: require passing stats
                 if not passing_rows:
                     logging.warning(
-                        f"SKIP {key}: no passing, receiving, or return stats — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no passing, rushing, receiving, or return stats — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
 
