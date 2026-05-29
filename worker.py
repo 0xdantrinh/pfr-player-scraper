@@ -106,12 +106,13 @@ def process_message(msg):
         if pfr_player_id:
             scraped_name   = data.get("player_info", {}).get("name", "")
             scraped_pos    = (data.get("player_info", {}).get("position") or "").upper()
-            passing_rows   = data.get("stats", {}).get("passing_standard", [])
-            receiving_rows = data.get("stats", {}).get("receiving_standard", [])
-            return_rows    = (data.get("stats", {}).get("kick_return_standard", []) or
-                              data.get("stats", {}).get("punt_return_standard", []))
-            # UT/RB players (e.g. Tyreek Hill) have receiving cols in rushing_standard
-            rushing_rows   = data.get("stats", {}).get("rushing_standard", [])
+            stats = data.get("stats", {})
+            # Check both _standard and bare table IDs — older SR CFB pages use bare names
+            passing_rows   = stats.get("passing_standard")   or stats.get("passing",   [])
+            receiving_rows = stats.get("receiving_standard") or stats.get("receiving", [])
+            rushing_rows   = stats.get("rushing_standard")   or stats.get("rushing",   [])
+            return_rows    = (stats.get("kick_return_standard") or stats.get("kick_return", []) or
+                              stats.get("punt_return_standard") or stats.get("punt_return", []))
             if not receiving_rows and rushing_rows:
                 if any(r.get("rec") or r.get("rec_yds") for r in rushing_rows):
                     receiving_rows = rushing_rows  # treat as receiver for guard purposes
