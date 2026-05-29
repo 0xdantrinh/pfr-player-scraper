@@ -111,6 +111,7 @@ def process_message(msg):
             passing_rows   = stats.get("passing_standard")   or stats.get("passing",   [])
             receiving_rows = stats.get("receiving_standard") or stats.get("receiving", [])
             rushing_rows   = stats.get("rushing_standard")   or stats.get("rushing",   [])
+            defense_rows   = stats.get("defense_standard")   or stats.get("defense",   [])
             return_rows    = (stats.get("kick_return_standard") or stats.get("kick_return", []) or
                               stats.get("punt_return_standard") or stats.get("punt_return", []))
             if not receiving_rows and rushing_rows:
@@ -121,19 +122,19 @@ def process_message(msg):
                     f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
                 )
                 return
-            is_skill_player = any(p in scraped_pos for p in ("WR", "TE", "RB", "WIDE", "TIGHT", "RUNNING"))
-            # Infer skill player from stats when position absent
-            if is_skill_player or (not passing_rows and (receiving_rows or return_rows or rushing_rows)):
-                if not receiving_rows and not return_rows and not rushing_rows:
+            any_stats = receiving_rows or return_rows or rushing_rows or defense_rows
+            is_skill_player = any(p in scraped_pos for p in ("WR", "TE", "RB", "DB", "LB", "CB", "S", "WIDE", "TIGHT", "RUNNING", "BACK", "CORNER", "SAFETY", "LINEBACKER"))
+            if is_skill_player or (not passing_rows and any_stats):
+                if not any_stats:
                     logging.warning(
-                        f"SKIP {key}: no rushing, receiving, or return stats for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no stats of any kind for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
             else:
                 # QB / default: require passing stats
                 if not passing_rows:
                     logging.warning(
-                        f"SKIP {key}: no passing, rushing, receiving, or return stats — wrong CFB disambiguation for {pfr_player_id}"
+                        f"SKIP {key}: no passing or other stats — wrong CFB disambiguation for {pfr_player_id}"
                     )
                     return
 
