@@ -90,11 +90,25 @@ def normalize_rows(headers, rows):
     return out
 
 
+def _infer_table_id(headers):
+    """Infer a table ID from column header data-stat keys for tables with no HTML id."""
+    h = set(h.lower() for h in headers if h)
+    if "rush_att" in h or ("att" in h and "yds" in h and "rec" in h):
+        return "rushing_standard"
+    if "tackles_solo" in h or "tackles_combined" in h or "def_int" in h:
+        return "defense_standard"
+    if "kick_ret" in h or "punt_ret" in h:
+        return "kick_return_standard"
+    if "pass_cmp" in h or "pass_att" in h:
+        return "passing_standard"
+    if "rec" in h and "rec_yds" in h:
+        return "receiving_standard"
+    return None
+
+
 def parse_tables(soup, stats):
     for table in soup.find_all("table"):
         tid = table.get("id")
-        if not tid:
-            continue
 
         header_row = table.select_one("thead tr:not(.over_header)") or table.find("tr")
 
@@ -104,6 +118,11 @@ def parse_tables(soup, stats):
                 th.get("data-stat") or th.get_text(strip=True)
                 for th in header_row.find_all("th")
             ]
+
+        if not tid:
+            tid = _infer_table_id(headers)
+        if not tid:
+            continue
 
         rows = []
         bold_flags = []  # parallel list: which rows had any bold (led-conference) cell
