@@ -16,60 +16,69 @@
   "p1_sharp_delta": 18,
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-05-29T16:19:49.568782+00:00",
+  "captured_at": "2026-05-29T23:03:45.199314+00:00",
   "mr_vegas_flag": true,
   "participant1_handle_pct_history": [
     17,
     23,
     23,
+    25,
     25
   ],
   "participant2_handle_pct_history": [
     83,
     77,
     77,
+    75,
     75
   ],
   "participant1_bets_pct_history": [
     4,
     6,
     6,
+    7,
     7
   ],
   "participant2_bets_pct_history": [
     96,
     94,
     94,
+    93,
     93
   ],
   "p1_sharp_delta_history": [
     13,
     17,
     17,
+    18,
     18
   ],
   "p2_sharp_delta_history": [
     -13,
     -17,
     -17,
+    -18,
     -18
   ],
   "participant1_odds_history": [
     "+160",
     "+190",
     "+190",
+    "+215",
     "+215"
   ],
   "participant2_odds_history": [
     "-192",
     "-230",
     "-230",
+    "-265",
     "-265"
   ],
   "captured_at_history": [
     "2026-05-28T00:48:12.198472+00:00",
     "2026-05-28T15:01:39.029580+00:00",
     "2026-05-28T22:34:47.203852+00:00",
-    "2026-05-29T16:19:49.568782+00:00"
+    "2026-05-29T16:19:49.568782+00:00",
+    "2026-05-29T23:03:45.199314+00:00"
   ]
 }
