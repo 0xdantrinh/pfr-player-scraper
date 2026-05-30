@@ -145,6 +145,7 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     # Handle percentage
     ax1.plot(times, handle_p1, marker="o", label=f"{p1_name} Handle", linewidth=2, alpha=0.8, linestyle="-")
     ax1.plot(times, handle_p2, marker="s", label=f"{p2_name} Handle", linewidth=2, alpha=0.8, linestyle="--")
+    ax1.axhline(y=30, color="gray", linestyle="--", linewidth=2.5, alpha=0.6, label="30% Threshold")
 
     # Add value labels on points
     for i, (t, v) in enumerate(zip(times, handle_p1)):
@@ -161,6 +162,7 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     # Betting tickets percentage
     ax2.plot(times, bets_p1, marker="o", label=f"{p1_name} Bets", linewidth=2, alpha=0.8, linestyle="-")
     ax2.plot(times, bets_p2, marker="s", label=f"{p2_name} Bets", linewidth=2, alpha=0.8, linestyle="--")
+    ax2.axhline(y=30, color="gray", linestyle="--", linewidth=2.5, alpha=0.6, label="30% Threshold")
 
     # Add value labels on points
     for i, (t, v) in enumerate(zip(times, bets_p1)):
