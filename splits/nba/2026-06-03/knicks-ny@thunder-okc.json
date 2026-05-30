@@ -1,0 +1,48 @@
+{
+  "matchup": "NY Knicks @ OKC Thunder",
+  "separator": "@",
+  "participant1": "NY Knicks",
+  "participant2": "OKC Thunder",
+  "participant1_slug": "knicks-ny",
+  "participant2_slug": "thunder-okc",
+  "game_datetime": "6/3, 08:40PM",
+  "participant1_odds": "+190",
+  "participant2_odds": "-230",
+  "participant1_handle_pct": 61,
+  "participant2_handle_pct": 39,
+  "participant1_bets_pct": 73,
+  "participant2_bets_pct": 27,
+  "p2_sharp_delta": 12,
+  "p1_sharp_delta": -12,
+  "league": "nba",
+  "source": "draftkings-network",
+  "captured_at": "2026-05-30T23:04:48.337900+00:00",
+  "mr_vegas_flag": true,
+  "participant1_handle_pct_history": [
+    61
+  ],
+  "participant2_handle_pct_history": [
+    39
+  ],
+  "participant1_bets_pct_history": [
+    73
+  ],
+  "participant2_bets_pct_history": [
+    27
+  ],
+  "p1_sharp_delta_history": [
+    -12
+  ],
+  "p2_sharp_delta_history": [
+    12
+  ],
+  "participant1_odds_history": [
+    "+190"
+  ],
+  "participant2_odds_history": [
+    "-230"
+  ],
+  "captured_at_history": [
+    "2026-05-30T23:04:48.337900+00:00"
+  ]
+}
