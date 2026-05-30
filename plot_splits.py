@@ -145,6 +145,13 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     # Handle percentage
     ax1.plot(times, handle_p1, marker="o", label=f"{p1_name} Handle", linewidth=2, alpha=0.8, linestyle="-")
     ax1.plot(times, handle_p2, marker="s", label=f"{p2_name} Handle", linewidth=2, alpha=0.8, linestyle="--")
+
+    # Add value labels on points
+    for i, (t, v) in enumerate(zip(times, handle_p1)):
+        ax1.text(t, v + 3, f"{v}%", fontsize=9, ha="center", va="bottom", color="C0")
+    for i, (t, v) in enumerate(zip(times, handle_p2)):
+        ax1.text(t, v - 3, f"{v}%", fontsize=9, ha="center", va="top", color="C1")
+
     ax1.set_ylabel("Handle %", fontsize=11)
     ax1.set_title("Money Wagered (Handle %)", fontsize=12, fontweight="bold")
     ax1.legend(loc="best")
@@ -154,6 +161,13 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     # Betting tickets percentage
     ax2.plot(times, bets_p1, marker="o", label=f"{p1_name} Bets", linewidth=2, alpha=0.8, linestyle="-")
     ax2.plot(times, bets_p2, marker="s", label=f"{p2_name} Bets", linewidth=2, alpha=0.8, linestyle="--")
+
+    # Add value labels on points
+    for i, (t, v) in enumerate(zip(times, bets_p1)):
+        ax2.text(t, v + 3, f"{v}%", fontsize=9, ha="center", va="bottom", color="C0")
+    for i, (t, v) in enumerate(zip(times, bets_p2)):
+        ax2.text(t, v - 3, f"{v}%", fontsize=9, ha="center", va="top", color="C1")
+
     ax2.set_ylabel("Bets %", fontsize=11)
     ax2.set_title("Public Tickets (Bets %)", fontsize=12, fontweight="bold")
     ax2.legend(loc="best")
