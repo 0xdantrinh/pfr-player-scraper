@@ -349,7 +349,7 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
 
         # Auto-generate and save plot
         if HAS_MATPLOTLIB:
-            plot_dir = os.path.join("plots", league)
+            plot_dir = os.path.join("plots", league, date_str)
             plot_filename = filename.replace(".json", ".png")
             plot_path = os.path.join(plot_dir, plot_filename)
             try:
