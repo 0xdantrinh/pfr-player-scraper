@@ -210,17 +210,31 @@ def parse_leaderboard_awards(soup):
         "leaderboard_appearances": 0,
     }
 
-    # The section header varies; find it by text content
-    section = None
-    for h2 in soup.find_all(["h2", "h3", "h4"]):
-        if "leaderboard" in h2.get_text(strip=True).lower() or "awards" in h2.get_text(strip=True).lower():
-            section = h2.find_parent()
-            break
+    # SR renders leaderboard data in div#div_leaderboard / div.leaderboard_grid —
+    # a sibling of the section heading, not a child. Find it directly.
+    def _leaderboard_text(s):
+        grid = s.find("div", id="div_leaderboard") or s.find("div", class_="leaderboard_grid")
+        if grid:
+            return grid.get_text(" ", strip=True)
+        # Fallback: walk up from the h2 heading to a common ancestor and grab all text
+        for h2 in s.find_all(["h2", "h3", "h4"]):
+            if "leaderboard" in h2.get_text(strip=True).lower() or "awards" in h2.get_text(strip=True).lower():
+                wrapper = h2.find_parent("div", id=lambda x: x and "leaderboard" in x) or h2.find_parent()
+                return wrapper.get_text(" ", strip=True) if wrapper else None
+        return None
 
-    if not section:
+    text = _leaderboard_text(soup)
+
+    if not text:
+        # Also check HTML comments (SR sometimes hides sections in comments)
+        for c in soup.find_all(string=lambda t: isinstance(t, Comment)):
+            if "leaderboard" in c.lower() or "awards and honors" in c.lower():
+                inner = BeautifulSoup(c, "lxml")
+                text = _leaderboard_text(inner) or str(c)
+                break
+
+    if not text:
         return out
-
-    text = section.get_text(" ", strip=True)
 
     # Count #1 appearances (led conference)
     out["led_conference_count"] = len(re.findall(r'\(#1\)', text))

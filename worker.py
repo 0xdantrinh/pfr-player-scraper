@@ -98,45 +98,16 @@ def process_message(msg):
         slug = data.get("player_id")
         key  = f"college/{slug}.json"
 
-        # Guard: wrong CFB disambiguation returns a player with the same name
-        # but a different position (e.g. DB named "Justin Fields" vs the QB).
-        # Skip upload if the name doesn't match the pfrId or there are no
-        # relevant stats. For QBs we require passing rows; for WRs/TEs/RBs we
-        # accept receiving rows; for other positions any non-empty stats table.
+        # Guard: only skip if the scraped name doesn't match the pfrId.
+        # Never filter by position or stats presence — a TE with only receiving
+        # stats, a blocker with no stats, or any other edge case is still valid.
         if pfr_player_id:
-            scraped_name   = data.get("player_info", {}).get("name", "")
-            scraped_pos    = (data.get("player_info", {}).get("position") or "").upper()
-            stats = data.get("stats", {})
-            # Check both _standard and bare table IDs — older SR CFB pages use bare names
-            passing_rows   = stats.get("passing_standard")   or stats.get("passing",   [])
-            receiving_rows = stats.get("receiving_standard") or stats.get("receiving", [])
-            rushing_rows   = stats.get("rushing_standard")   or stats.get("rushing",   [])
-            defense_rows   = stats.get("defense_standard")   or stats.get("defense",   [])
-            return_rows    = (stats.get("kick_return_standard") or stats.get("kick_return", []) or
-                              stats.get("punt_return_standard") or stats.get("punt_return", []))
-            if not receiving_rows and rushing_rows:
-                if any(r.get("rec") or r.get("rec_yds") for r in rushing_rows):
-                    receiving_rows = rushing_rows  # treat as receiver for guard purposes
+            scraped_name = data.get("player_info", {}).get("name", "")
             if not _name_matches_pfr_id(scraped_name, pfr_player_id):
                 logging.warning(
                     f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
                 )
                 return
-            any_stats = receiving_rows or return_rows or rushing_rows or defense_rows
-            is_skill_player = any(p in scraped_pos for p in ("WR", "TE", "RB", "DB", "LB", "CB", "S", "WIDE", "TIGHT", "RUNNING", "BACK", "CORNER", "SAFETY", "LINEBACKER"))
-            if is_skill_player or (not passing_rows and any_stats):
-                if not any_stats:
-                    logging.warning(
-                        f"SKIP {key}: no stats of any kind for {scraped_pos or 'unknown'} — wrong CFB disambiguation for {pfr_player_id}"
-                    )
-                    return
-            else:
-                # QB / default: require passing stats
-                if not passing_rows:
-                    logging.warning(
-                        f"SKIP {key}: no passing or other stats — wrong CFB disambiguation for {pfr_player_id}"
-                    )
-                    return
 
     else:
         data      = parse_page(html, url)
