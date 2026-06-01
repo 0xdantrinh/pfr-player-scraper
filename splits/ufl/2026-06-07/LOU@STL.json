@@ -1,0 +1,48 @@
+{
+  "matchup": "Louisville Kings @ St. Louis Battlehawks",
+  "separator": "@",
+  "participant1": "Louisville Kings",
+  "participant2": "St. Louis Battlehawks",
+  "participant1_slug": "LOU",
+  "participant2_slug": "STL",
+  "game_datetime": "6/7, 06:00PM",
+  "participant1_odds": "+124",
+  "participant2_odds": "-148",
+  "participant1_handle_pct": 88,
+  "participant2_handle_pct": 12,
+  "participant1_bets_pct": 53,
+  "participant2_bets_pct": 47,
+  "p2_sharp_delta": -35,
+  "p1_sharp_delta": 35,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-01T05:51:21.285265+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    88
+  ],
+  "participant2_handle_pct_history": [
+    12
+  ],
+  "participant1_bets_pct_history": [
+    53
+  ],
+  "participant2_bets_pct_history": [
+    47
+  ],
+  "p1_sharp_delta_history": [
+    35
+  ],
+  "p2_sharp_delta_history": [
+    -35
+  ],
+  "participant1_odds_history": [
+    "+124"
+  ],
+  "participant2_odds_history": [
+    "-148"
+  ],
+  "captured_at_history": [
+    "2026-06-01T05:51:21.285265+00:00"
+  ]
+}
