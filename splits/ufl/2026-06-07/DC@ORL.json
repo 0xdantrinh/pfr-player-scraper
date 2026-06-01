@@ -1,0 +1,48 @@
+{
+  "matchup": "D.C. Defenders @ Orlando Storm",
+  "separator": "@",
+  "participant1": "D.C. Defenders",
+  "participant2": "Orlando Storm",
+  "participant1_slug": "DC",
+  "participant2_slug": "ORL",
+  "game_datetime": "6/7, 03:00PM",
+  "participant1_odds": "+154",
+  "participant2_odds": "-185",
+  "participant1_handle_pct": 15,
+  "participant2_handle_pct": 85,
+  "participant1_bets_pct": 14,
+  "participant2_bets_pct": 86,
+  "p2_sharp_delta": -1,
+  "p1_sharp_delta": 1,
+  "league": "ufl",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-01T05:50:04.936779+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    15
+  ],
+  "participant2_handle_pct_history": [
+    85
+  ],
+  "participant1_bets_pct_history": [
+    14
+  ],
+  "participant2_bets_pct_history": [
+    86
+  ],
+  "p1_sharp_delta_history": [
+    1
+  ],
+  "p2_sharp_delta_history": [
+    -1
+  ],
+  "participant1_odds_history": [
+    "+154"
+  ],
+  "participant2_odds_history": [
+    "-185"
+  ],
+  "captured_at_history": [
+    "2026-06-01T05:50:04.936779+00:00"
+  ]
+}
