@@ -622,21 +622,18 @@ This disables images, fonts, and other heavy resources inside the browser which 
 
 ---
 
-# DraftKings Betting Splits Capture
+# Betting Splits Capture
 
-`capture_betting_splits.py` scrapes the [DK Network betting splits page](https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/) via FlareSolverr and saves a local JSON snapshot per game. Run it manually or via cron whenever you want fresh splits.
+`capture_betting_splits.py` captures betting splits (handle % and bets %) from two independent sources via FlareSolverr. Run it manually or on a cron to build a market-movement timeline per game.
 
-## Supported Sports
+## Sources
 
-| League | Event Group | Notes          |
-| ------ | ----------- | -------------- |
-| `ufl`  | 212333      | UFL football   |
-| `ufc`  | 9034        | UFC fights     |
-| `nfl`  | 88808       | NFL football   |
-| `nba`  | 42648       | NBA basketball |
-| `mlb`  | 84240       | MLB baseball   |
+| `--source`         | Data from                     | Bet types                 | Sports supported                                    |
+| ------------------ | ----------------------------- | ------------------------- | --------------------------------------------------- |
+| `draftkings`       | DraftKings Network (single-book) | Moneyline + Total + Spread | `ufl` `ufc` `nfl` `nba` `mlb`                      |
+| `betmgm_caesars`   | ScoresAndOdds.com (BetMGM + Caesars combined) | Moneyline + Total + Spread/Runline/Puckline | `nfl` `nba` `mlb` `ncaaf` `ncaab` `nhl` `wnba` |
 
-Find additional event group IDs in the `tb_eg=` URL parameter on the DK Network page.
+**Note:** ScoresAndOdds only shows games for the current day; DraftKings shows games up to 7 days ahead.
 
 ## Usage
 
@@ -652,73 +649,90 @@ Activate virtual environment:
 source venv/bin/activate
 ```
 
-Capture all upcoming games for a league:
+**DraftKings (default):**
 
 ```bash
-# Capture all upcoming UFL games
 python capture_betting_splits.py --league ufl
-
-# Capture UFC card
-python capture_betting_splits.py --league ufc
-
-# Dry run (print without saving)
+python capture_betting_splits.py --league nfl
 python capture_betting_splits.py --league ufl --dry-run
 ```
 
+**BetMGM + Caesars (ScoresAndOdds):**
+
+```bash
+python capture_betting_splits.py --league mlb --source betmgm_caesars
+python capture_betting_splits.py --league nhl --source betmgm_caesars
+python capture_betting_splits.py --league nba --source betmgm_caesars --dry-run
+```
+
+## Output Structure
+
+**DraftKings:** `splits/{league}/{YYYY-MM-DD}/{away}@{home}.json`
+→ S3: `s3://moneyline-splits/{league}/{date}/{file}.json`
+
+**BetMGM+Caesars:** `splits/betmgm_caesars/{league}/{YYYY-MM-DD}/{away}@{home}.json`
+→ S3: `s3://moneyline-splits/betmgm_caesars/{league}/{date}/{file}.json`
+
 ## Data Structure
 
-Files saved to `splits/{league}/{YYYY-MM-DD}/{participant1}@{participant2}.json`:
-
-```
-splits/ufl/2026-05-22/DC@ORL.json
-splits/ufc/2026-05-16/tokkos-tuco-vs-erslan-ivan.json
-```
-
-Each JSON includes:
-
-**Current Snapshot:**
-
-- `participant1/2_odds` — Current moneyline odds
-- `participant1/2_handle_pct` — % of money wagered on each side
-- `participant1/2_bets_pct` — % of tickets (public) on each side
-- `p1/p2_sharp_delta` — handle% minus bets% (positive = sharp money on that side)
-- `mr_vegas_flag` — true if either participant hit +180 odds (Mr Vegas Theory indicator)
-
-**Historical Arrays** (for plotting):
-
-- `participant1/2_odds_history` — Array of odds over time
-- `participant1/2_handle_pct_history` — Array of handle percentages
-- `participant1/2_bets_pct_history` — Array of public bet percentages
-- `p1/p2_sharp_delta_history` — Array of sharp deltas
-- `captured_at_history` — Array of capture timestamps (for x-axis)
-
-Example:
+Each JSON file contains the full moneyline snapshot at the top level (backwards compatible) plus `total` and `spread` nested sections:
 
 ```json
 {
-  "matchup": "St. Louis Battlehawks @ Houston Gamblers",
-  "participant1": "St. Louis Battlehawks",
-  "participant2": "Houston Gamblers",
-  "participant1_odds": "-162",
-  "participant2_odds": "+136",
-  "participant1_handle_pct": 92,
-  "participant2_handle_pct": 8,
-  "participant1_bets_pct": 77,
-  "participant2_bets_pct": 23,
-  "p1_sharp_delta": 15,
-  "p2_sharp_delta": -15,
+  "matchup": "TOR @ ATL",
+  "source": "betmgm_caesars",
+
+  "participant1_bets_pct": 13,
+  "participant2_bets_pct": 87,
+  "participant1_handle_pct": 18,
+  "participant2_handle_pct": 82,
+  "participant1_odds": "+220",
+  "participant2_odds": "-250",
+  "p1_sharp_delta": -5,
+  "p2_sharp_delta": 5,
   "mr_vegas_flag": false,
-  "participant1_odds_history": ["-162", "-165", "-162"],
-  "participant2_odds_history": ["+136", "+140", "+136"],
-  "participant1_handle_pct_history": [94, 93, 92],
-  "participant2_handle_pct_history": [6, 7, 8],
-  "participant1_bets_pct_history": [85, 80, 77],
-  "participant2_bets_pct_history": [15, 20, 23],
-  "captured_at_history": [
-    "2026-05-18T17:00:07.419397+00:00",
-    "2026-05-18T21:30:12.805621+00:00",
-    "2026-05-19T16:52:45.592317+00:00"
-  ]
+
+  "total": {
+    "line": "7.5",
+    "over_bets_pct": 94,
+    "under_bets_pct": 6,
+    "over_handle_pct": 84,
+    "under_handle_pct": 16,
+    "over_odds": "-120",
+    "under_odds": "-115",
+    "over_sharp_delta": -10
+  },
+
+  "spread": {
+    "participant1_line": "+1.5",
+    "participant2_line": "-1.5",
+    "participant1_bets_pct": 11,
+    "participant2_bets_pct": 89,
+    "participant1_handle_pct": 11,
+    "participant2_handle_pct": 89,
+    "participant1_odds": "even",
+    "participant2_odds": "-113",
+    "p1_sharp_delta": 0,
+    "p2_sharp_delta": 0
+  },
+
+  "participant1_handle_pct_history": [18],
+  "participant2_handle_pct_history": [82],
+  "participant1_bets_pct_history": [13],
+  "participant2_bets_pct_history": [87],
+  "participant1_odds_history": ["+220"],
+  "participant2_odds_history": ["-250"],
+  "p1_sharp_delta_history": [-5],
+  "p2_sharp_delta_history": [5],
+  "total_over_bets_pct_history": [94],
+  "total_under_bets_pct_history": [6],
+  "total_over_handle_pct_history": [84],
+  "total_under_handle_pct_history": [16],
+  "spread_participant1_bets_pct_history": [11],
+  "spread_participant2_bets_pct_history": [89],
+  "spread_participant1_handle_pct_history": [11],
+  "spread_participant2_handle_pct_history": [89],
+  "captured_at_history": ["2026-06-04T22:15:00Z"]
 }
 ```
 
@@ -726,131 +740,57 @@ Example:
 
 ### Sharp Money Signals
 
-**Positive `p1_sharp_delta`:**
+`p2_sharp_delta = handle_pct - bets_pct` for participant 2 (home team / home side).
 
-- Handle % on P1 > Bets % on P1
-- Example: 79% handle vs 43% bets = 36% sharp delta
-- Meaning: Sharp money is backing P1, public favors P2
+- **Positive sharp delta on P2**: Sharp money backing P2; public loves P1
+- **Negative sharp delta on P2**: Sharps fading P2; public action on P2
 
-**Negative `p1_sharp_delta`:**
-
-- Handle % on P1 < Bets % on P1
-- Sharp money is opposing P1, public favors P1
+Same logic applies to `total.over_sharp_delta` (over handle% − over bets%).
 
 ### Mr Vegas Theory
 
-The `mr_vegas_flag` triggers if either participant's odds ever reached **+180 or better**.
-
-**Why it matters:**
-
-- Vegas initially sets the line to balance action
-- If a dog hits +180+, it signals Vegas's initial lean toward that underdog
-- Once triggered, the flag remains `true` even if odds tighten (validates the theory)
-
-Example:
+`mr_vegas_flag` triggers if either participant's moneyline odds ever reached **+180 or better**. Once triggered the flag is **sticky** — it stays `true` even if the line tightens, because the initial signal is what matters.
 
 ```json
 {
   "matchup": "Dallas Renegades @ Louisville Kings",
   "participant1_odds": "+114",
-  "participant2_odds": "-135",
   "mr_vegas_flag": true
 }
 ```
 
-→ Either DAL or LOU hit +180+ at some point. This matchup is a Mr Vegas candidate.
+→ DAL or LOU hit +180+ at some point — classic Mr Vegas setup.
 
 ## Plotting Market Movement
 
-Use `plot_splits.py` to visualize how betting splits and odds have moved over time.
-
-### Installation
-
-Make sure matplotlib is installed:
-
 ```bash
-pip install matplotlib
-```
-
-### Commands
-
-**List all games for a league:**
-
-```bash
+# List available games
 python plot_splits.py --league ufl
-```
 
-Output:
-
-```
-Available games for ufl:
-  D.C. Defenders @ Orlando Storm (-108 / -112)
-  Birmingham Stallions @ Columbus Aviators (93 / 7)
-  Dallas Renegades @ Louisville Kings (+114 / -135) [MR VEGAS]
-  St. Louis Battlehawks @ Houston Gamblers (-162 / +136)
-
-To plot a game, use: python plot_splits.py --league ufl --matchup <name>
-```
-
-**Plot a specific game:**
-
-```bash
+# Plot a specific game (7 subplots: ML handle/bets/odds + total handle/bets + spread handle/bets)
 python plot_splits.py --league ufl --matchup "STL@HOU"
-python plot_splits.py --league ufl --matchup "DAL@LOU"
+python plot_splits.py --league betmgm_caesars/mlb --matchup "TOR@ATL"
+
+# Sync latest from S3 first
+python plot_splits.py --league ufl --sync-s3
 ```
 
-**Plot all games in one figure (one per window):**
+The chart shows up to **7 subplots** when total and spread data are present:
 
-```bash
-python plot_splits.py --league ufl --all
-```
-
-### Output
-
-The plot shows 3 subplots over time:
-
-1. **Handle % (Money Wagered)** — Shows which side professionals and public are backing
-2. **Bets % (Public Tickets)** — Shows where casual bettors are placing tickets
-3. **Line Movement** — Shows how odds have shifted (indicates market adjustment)
-
-**Reading the chart:**
-
-- Diverging lines in Handle vs Bets = sharp/public split
-- Sharp handle increasing = smart money adjusting
-- Line moving toward underdog = market correcting
-
-## Sharp Signal Example
-
-```json
-{
-  "matchup": "Dallas Renegades @ Louisville Kings",
-  "participant1_handle_pct": 73,
-  "participant2_handle_pct": 27,
-  "participant1_bets_pct": 25,
-  "participant2_bets_pct": 75,
-  "p1_sharp_delta": 48,
-  "mr_vegas_flag": true
-}
-```
-
-**Interpretation:**
-
-- 73% of money on DAL (underdog at +114)
-- Only 25% of tickets on DAL
-- 48-point sharp delta = massive sharp divergence
-- Mr Vegas flag = DAL hit +180+ at some point
-- **Signal:** Sophisticated money is heavily backing DAL despite public loving LOU
+1. Moneyline — Handle %
+2. Moneyline — Bets %
+3. Moneyline — Line Movement (odds)
+4. Total — Handle % (Over vs Under)
+5. Total — Bets % (Over vs Under)
+6. Spread/Runline — Handle %
+7. Spread/Runline — Bets %
 
 ## Recommended Cron
 
-Run before key sports kickoff times:
-
 ```cron
-# Run at 5pm and 7pm every Saturday and Sunday (before UFL/UFC)
-0 17,19 * * 6,7 cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league ufl
+# DK splits every 30 min on game days
+*/30 * * * * cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league nfl
 
-# Or for UFC:
-0 17,19 * * 6,7 cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league ufc
+# BetMGM+Caesars MLB every hour on game days
+0 * * * * cd /path/to/pfr-player-scraper && source venv/bin/activate && python capture_betting_splits.py --league mlb --source betmgm_caesars
 ```
-
-This captures snapshots throughout the day, building a complete market movement history for analysis.
