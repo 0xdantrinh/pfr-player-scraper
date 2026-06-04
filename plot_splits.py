@@ -148,8 +148,8 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     sp_p1_handle     = game_data.get("spread_participant1_handle_pct_history", [])
     sp_p2_handle     = game_data.get("spread_participant2_handle_pct_history", [])
 
-    has_total  = bool(tot_over_bets)
-    has_spread = bool(sp_p1_bets)
+    has_total  = any(v is not None for v in tot_over_bets)
+    has_spread = any(v is not None for v in sp_p1_bets)
 
     # Dynamic layout: 3 rows (ML handle, ML bets, ML odds)
     # + 2 rows for total + 2 rows for spread when data present
@@ -161,13 +161,20 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     extra_axes = list(axes[3:])
 
     def _plot_pct_ax(ax, t, series1, series2, label1, label2, title):
-        ax.plot(t, series1, marker="o", label=label1, linewidth=2, alpha=0.8)
-        ax.plot(t, series2, marker="s", label=label2, linewidth=2, alpha=0.8, linestyle="--")
+        # Trim times to match each series length to avoid shape mismatch
+        s1 = [v for v in (series1 or []) if v is not None]
+        s2 = [v for v in (series2 or []) if v is not None]
+        t1 = t[:len(s1)]
+        t2 = t[:len(s2)]
+        if s1:
+            ax.plot(t1, s1, marker="o", label=label1, linewidth=2, alpha=0.8)
+            for tv, v in zip(t1, s1):
+                ax.text(tv, v + 2.5, f"{v}%", fontsize=8, ha="center", va="bottom", color="C0")
+        if s2:
+            ax.plot(t2, s2, marker="s", label=label2, linewidth=2, alpha=0.8, linestyle="--")
+            for tv, v in zip(t2, s2):
+                ax.text(tv, v - 2.5, f"{v}%", fontsize=8, ha="center", va="top", color="C1")
         ax.axhline(y=30, color="gray", linestyle="--", linewidth=1.5, alpha=0.5, label="30%")
-        for tv, v in zip(t, series1):
-            ax.text(tv, v + 2.5, f"{v}%", fontsize=8, ha="center", va="bottom", color="C0")
-        for tv, v in zip(t, series2):
-            ax.text(tv, v - 2.5, f"{v}%", fontsize=8, ha="center", va="top", color="C1")
         ax.set_title(title, fontsize=11, fontweight="bold")
         ax.set_ylim(0, 100)
         ax.legend(loc="best", fontsize=9)
