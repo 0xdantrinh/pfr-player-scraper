@@ -1,0 +1,115 @@
+{
+  "matchup": "SD @ PHI",
+  "separator": "@",
+  "participant1": "SD",
+  "participant2": "PHI",
+  "participant1_slug": "SD",
+  "participant2_slug": "PHI",
+  "game_datetime": "6/5 1:40AM",
+  "participant1_odds": "+235",
+  "participant2_odds": "-215",
+  "participant1_handle_pct": 26,
+  "participant2_handle_pct": 74,
+  "participant1_bets_pct": 18,
+  "participant2_bets_pct": 82,
+  "p2_sharp_delta": -8,
+  "p1_sharp_delta": 8,
+  "total": {
+    "line": "8.5",
+    "over_bets_pct": 60,
+    "under_bets_pct": 40,
+    "over_handle_pct": 54,
+    "under_handle_pct": 46,
+    "over_odds": "even",
+    "under_odds": "-109",
+    "over_sharp_delta": -6
+  },
+  "spread": {
+    "participant1_line": "+1.5",
+    "participant2_line": "-1.5",
+    "participant1_bets_pct": 21,
+    "participant2_bets_pct": 79,
+    "participant1_handle_pct": 34,
+    "participant2_handle_pct": 66,
+    "participant1_odds": "+2",
+    "participant2_odds": "-1",
+    "p1_sharp_delta": 13,
+    "p2_sharp_delta": -13
+  },
+  "league": "mlb",
+  "source": "betmgm_caesars",
+  "captured_at": "2026-06-04T22:53:07.728513+00:00",
+  "mr_vegas_flag": true,
+  "participant1_handle_pct_history": [
+    26
+  ],
+  "participant2_handle_pct_history": [
+    74
+  ],
+  "participant1_bets_pct_history": [
+    18
+  ],
+  "participant2_bets_pct_history": [
+    82
+  ],
+  "p1_sharp_delta_history": [
+    8
+  ],
+  "p2_sharp_delta_history": [
+    -8
+  ],
+  "participant1_odds_history": [
+    "+235"
+  ],
+  "participant2_odds_history": [
+    "-215"
+  ],
+  "total_over_bets_pct_history": [
+    60
+  ],
+  "total_under_bets_pct_history": [
+    40
+  ],
+  "total_over_handle_pct_history": [
+    54
+  ],
+  "total_under_handle_pct_history": [
+    46
+  ],
+  "total_over_odds_history": [
+    "even"
+  ],
+  "total_under_odds_history": [
+    "-109"
+  ],
+  "total_over_sharp_delta_history": [
+    -6
+  ],
+  "spread_participant1_bets_pct_history": [
+    21
+  ],
+  "spread_participant2_bets_pct_history": [
+    79
+  ],
+  "spread_participant1_handle_pct_history": [
+    34
+  ],
+  "spread_participant2_handle_pct_history": [
+    66
+  ],
+  "spread_participant1_odds_history": [
+    "+2"
+  ],
+  "spread_participant2_odds_history": [
+    "-1"
+  ],
+  "spread_p1_sharp_delta_history": [
+    13
+  ],
+  "spread_p2_sharp_delta_history": [
+    -13
+  ],
+  "captured_at_history": [
+    "2026-06-04T22:53:07.728513+00:00"
+  ]
+}
