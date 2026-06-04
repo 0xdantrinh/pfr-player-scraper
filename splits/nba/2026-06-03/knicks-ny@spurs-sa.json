@@ -6,43 +6,52 @@
   "participant1_slug": "knicks-ny",
   "participant2_slug": "spurs-sa",
   "game_datetime": "6/3, 08:40PM",
-  "participant1_odds": "+145",
-  "participant2_odds": "-175",
-  "participant1_handle_pct": 67,
-  "participant2_handle_pct": 33,
-  "participant1_bets_pct": 73,
-  "participant2_bets_pct": 27,
-  "p2_sharp_delta": 6,
-  "p1_sharp_delta": -6,
+  "participant1_odds": "+154",
+  "participant2_odds": "-185",
+  "participant1_handle_pct": 65,
+  "participant2_handle_pct": 35,
+  "participant1_bets_pct": 55,
+  "participant2_bets_pct": 45,
+  "p2_sharp_delta": -10,
+  "p1_sharp_delta": 10,
   "league": "nba",
   "source": "draftkings-network",
-  "captured_at": "2026-05-30T23:04:48.878057+00:00",
+  "captured_at": "2026-06-03T07:28:39.939974+00:00",
   "mr_vegas_flag": false,
   "participant1_handle_pct_history": [
-    67
+    67,
+    65
   ],
   "participant2_handle_pct_history": [
-    33
+    33,
+    35
   ],
   "participant1_bets_pct_history": [
-    73
+    73,
+    55
   ],
   "participant2_bets_pct_history": [
-    27
+    27,
+    45
   ],
   "p1_sharp_delta_history": [
-    -6
+    -6,
+    10
   ],
   "p2_sharp_delta_history": [
-    6
+    6,
+    -10
   ],
   "participant1_odds_history": [
-    "+145"
+    "+145",
+    "+154"
   ],
   "participant2_odds_history": [
-    "-175"
+    "-175",
+    "-185"
   ],
   "captured_at_history": [
-    "2026-05-30T23:04:48.878057+00:00"
+    "2026-05-30T23:04:48.878057+00:00",
+    "2026-06-03T07:28:39.939974+00:00"
   ]
 }
