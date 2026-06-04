@@ -1,0 +1,48 @@
+{
+  "matchup": "NY Knicks @ SA Spurs",
+  "separator": "@",
+  "participant1": "NY Knicks",
+  "participant2": "SA Spurs",
+  "participant1_slug": "knicks-ny",
+  "participant2_slug": "spurs-sa",
+  "game_datetime": "6/5, 08:30PM",
+  "participant1_odds": "+185",
+  "participant2_odds": "-225",
+  "participant1_handle_pct": 59,
+  "participant2_handle_pct": 41,
+  "participant1_bets_pct": 52,
+  "participant2_bets_pct": 48,
+  "p2_sharp_delta": -7,
+  "p1_sharp_delta": 7,
+  "league": "nba",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T22:01:06.922676+00:00",
+  "mr_vegas_flag": true,
+  "participant1_handle_pct_history": [
+    59
+  ],
+  "participant2_handle_pct_history": [
+    41
+  ],
+  "participant1_bets_pct_history": [
+    52
+  ],
+  "participant2_bets_pct_history": [
+    48
+  ],
+  "p1_sharp_delta_history": [
+    7
+  ],
+  "p2_sharp_delta_history": [
+    -7
+  ],
+  "participant1_odds_history": [
+    "+185"
+  ],
+  "participant2_odds_history": [
+    "-225"
+  ],
+  "captured_at_history": [
+    "2026-06-04T22:01:06.922676+00:00"
+  ]
+}
