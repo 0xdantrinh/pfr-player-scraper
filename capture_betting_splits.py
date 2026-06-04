@@ -1,13 +1,22 @@
-"""Capture DraftKings betting splits (% Handle + % Bets) for UFL games.
+"""Capture betting splits (% Handle + % Bets) from multiple sources.
 
-Scrapes the DK Network page via FlareSolverr and saves all current games
-to local JSON files. Just run it whenever you want a fresh snapshot.
+Sources:
+  draftkings  — DraftKings Network (default). Single-book. Supports: ufl, ufc, nfl, nba, mlb
+  betmgm_caesars — ScoresAndOdds.com consensus (BetMGM + Caesars combined).
+                   Supports: nfl, nba, mlb, ncaaf, ncaab, nhl, wnba
 
-Output: splits/{YYYY-MM-DD}/{away}@{home}.json  (overwrites on re-run)
+Output:
+  DraftKings:    splits/{league}/{YYYY-MM-DD}/{away}@{home}.json
+  BetMGM+Caesar: splits/betmgm_caesars/{league}/{YYYY-MM-DD}/{away}@{home}.json
+
+S3:
+  DraftKings:    {SPLITS_S3_BUCKET}/{league}/{date}/{file}.json
+  BetMGM+Caesar: {SPLITS_S3_BUCKET}/betmgm_caesars/{league}/{date}/{file}.json
 
 Usage:
-    python capture_betting_splits.py --league ufl           # save all games
-    python capture_betting_splits.py --league ufl --dry-run # print only
+    python capture_betting_splits.py --league ufl                            # DK, save
+    python capture_betting_splits.py --league mlb --source betmgm_caesars   # SAO, save
+    python capture_betting_splits.py --league nfl --source betmgm_caesars --dry-run
 """
 
 import argparse
@@ -53,6 +62,20 @@ EVENT_GROUPS = {
     "mlb":  "84240",
     # Add more as needed — find the tb_eg value from the URL when on that sport's page
 }
+
+# ScoresAndOdds.com (BetMGM + Caesars aggregated data)
+SAO_BASE_URL = "https://www.scoresandodds.com/{sport}/consensus-picks"
+SAO_SPORTS = {
+    "nfl":   "nfl",
+    "nba":   "nba",
+    "mlb":   "mlb",
+    "ncaaf": "ncaaf",
+    "ncaab": "ncaab",
+    "nhl":   "nhl",
+    "wnba":  "wnba",
+}
+
+ALL_LEAGUES = sorted(set(list(EVENT_GROUPS) + list(SAO_SPORTS)))
 
 # UFL team abbreviations — other sports use slugified participant names
 TEAM_ALIAS = {
@@ -120,6 +143,167 @@ def fetch_rendered_html(url: str, league: str = "default") -> str:
     html = data["solution"]["response"]
     log.info("Got %d bytes (HTTP %s)", len(html), data["solution"].get("status"))
     return html
+
+
+# ── ScoresAndOdds.com fetch + parse (BetMGM + Caesars combined) ──────────────
+
+def fetch_sao_html(sport: str) -> str:
+    url = SAO_BASE_URL.format(sport=SAO_SPORTS[sport])
+    log.info("Fetching ScoresAndOdds via FlareSolverr: %s", url)
+    r = requests.post(FLARESOLVERR_URL, json={
+        "cmd": "request.get",
+        "url": url,
+        "session": "sao-splits",
+        "session_ttl_minutes": 60,
+        "maxTimeout": 120000,
+    }, timeout=(10, 150))
+    try:
+        data = r.json()
+    except Exception:
+        r.raise_for_status()
+        raise
+    if data.get("status") != "ok":
+        raise RuntimeError(f"FlareSolverr error: {data.get('message')}")
+    html = data["solution"]["response"]
+    log.info("Got %d bytes (HTTP %s)", len(html), data["solution"].get("status"))
+    return html
+
+
+def parse_sao_games(html: str) -> list[dict]:
+    """Parse ScoresAndOdds consensus picks page (MONEYLINE tab default).
+
+    The page renders abbreviations in the splits section:
+      TOR  % OF BETS  ATL   13%  87%   18%  82%  % OF MONEY
+      BEST AWAY ODDS +220   BEST HOME ODDS -250
+
+    Falls back to text regex when CSS structure is unknown.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    games = []
+
+    # ── Strategy 1: CSS-selector based (inspect rendered HTML to refine) ──────
+    # Try common scoresandodds game card classes
+    card_selectors = [
+        "div.consensus-game", "div.game-card", "div.splits-game",
+        "div[class*='game']", "div[class*='consensus']",
+    ]
+    cards = []
+    for sel in card_selectors:
+        cards = soup.select(sel)
+        if cards:
+            log.info("Found %d game cards via selector: %s", len(cards), sel)
+            break
+
+    if cards:
+        for card in cards:
+            text = card.get_text(" ", strip=True)
+            game = _parse_sao_card_text(text)
+            if game:
+                games.append(game)
+        if games:
+            return games
+
+    # ── Strategy 2: Full-page text regex fallback ─────────────────────────────
+    log.info("CSS selectors found no cards — falling back to full-page text regex")
+    full_text = soup.get_text(" ", strip=True)
+    # Log a snippet to help diagnose HTML structure in dry-run mode
+    log.debug("Page text snippet (first 500 chars): %s", full_text[:500])
+
+    # Scan for blocks: ABBR % OF BETS ABBR bets1% bets2% handle1% handle2%
+    pattern = re.compile(
+        r'([A-Z]{2,5})\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+([A-Z]{2,5})'
+        r'\s+(\d{1,3})%\s+(\d{1,3})%'   # bets pcts
+        r'\s+(\d{1,3})%\s+(\d{1,3})%',  # handle pcts (after % OF MONEY label)
+        re.DOTALL,
+    )
+    odds_pattern = re.compile(
+        r'BEST\s+AWAY\s+ODDS\s+([+\-]\d+).*?BEST\s+HOME\s+ODDS\s+([+\-]\d+)',
+        re.DOTALL | re.IGNORECASE,
+    )
+    dt_pattern = re.compile(r'(\d{1,2}/\d{1,2})\s+(\d{1,2}:\d{2}(?:AM|PM))', re.IGNORECASE)
+
+    pos = 0
+    for m in pattern.finditer(full_text):
+        away_slug = m.group(1)
+        home_slug = m.group(2)
+        bets_away, bets_home     = int(m.group(3)), int(m.group(4))
+        handle_away, handle_home = int(m.group(5)), int(m.group(6))
+
+        # Look for odds in the ~300 chars after the pct match
+        segment = full_text[m.start():m.end() + 300]
+        odds_m = odds_pattern.search(segment)
+        odds_away = odds_m.group(1) if odds_m else None
+        odds_home = odds_m.group(2) if odds_m else None
+
+        # Look for game datetime in the 200 chars before the match
+        pre = full_text[max(0, m.start() - 200):m.start()]
+        dt_m = dt_pattern.search(pre)
+        game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
+
+        sharp_home = handle_home - bets_home
+        games.append({
+            "matchup":            f"{away_slug} @ {home_slug}",
+            "separator":          "@",
+            "participant1":       away_slug,
+            "participant2":       home_slug,
+            "participant1_slug":  away_slug,
+            "participant2_slug":  home_slug,
+            "game_datetime":      game_dt,
+            "participant1_odds":        odds_away,
+            "participant2_odds":        odds_home,
+            "participant1_handle_pct":  handle_away,
+            "participant2_handle_pct":  handle_home,
+            "participant1_bets_pct":    bets_away,
+            "participant2_bets_pct":    bets_home,
+            "p2_sharp_delta": sharp_home,
+            "p1_sharp_delta": -sharp_home,
+        })
+        pos = m.end()
+
+    return games
+
+
+def _parse_sao_card_text(text: str) -> dict | None:
+    """Parse a single game card's text into a splits dict."""
+    m = re.search(
+        r'([A-Z]{2,5})\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+([A-Z]{2,5})'
+        r'\s+(\d{1,3})%\s+(\d{1,3})%\s+(\d{1,3})%\s+(\d{1,3})%',
+        text,
+    )
+    if not m:
+        return None
+    away_slug, home_slug = m.group(1), m.group(2)
+    bets_away, bets_home     = int(m.group(3)), int(m.group(4))
+    handle_away, handle_home = int(m.group(5)), int(m.group(6))
+
+    odds_m = re.search(
+        r'BEST\s+AWAY\s+ODDS\s+([+\-]\d+).*?BEST\s+HOME\s+ODDS\s+([+\-]\d+)',
+        text, re.IGNORECASE | re.DOTALL,
+    )
+    odds_away = odds_m.group(1) if odds_m else None
+    odds_home = odds_m.group(2) if odds_m else None
+
+    dt_m = re.search(r'(\d{1,2}/\d{1,2})\s+(\d{1,2}:\d{2}(?:AM|PM))', text, re.IGNORECASE)
+    game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
+
+    sharp_home = handle_home - bets_home
+    return {
+        "matchup":            f"{away_slug} @ {home_slug}",
+        "separator":          "@",
+        "participant1":       away_slug,
+        "participant2":       home_slug,
+        "participant1_slug":  away_slug,
+        "participant2_slug":  home_slug,
+        "game_datetime":      game_dt,
+        "participant1_odds":        odds_away,
+        "participant2_odds":        odds_home,
+        "participant1_handle_pct":  handle_away,
+        "participant2_handle_pct":  handle_home,
+        "participant1_bets_pct":    bets_away,
+        "participant2_bets_pct":    bets_home,
+        "p2_sharp_delta": sharp_home,
+        "p1_sharp_delta": -sharp_home,
+    }
 
 
 # ── HTML parser (BeautifulSoup — robust against whitespace) ───────────────────
@@ -285,9 +469,9 @@ def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odd
     return check_mr_vegas_flag(current_p1_odds, current_p2_odds)
 
 
-def upload_to_s3(filepath: str, league: str, filename: str) -> None:
-    """Upload a splits file to S3."""
-    s3_key = f"{league}/{os.path.basename(os.path.dirname(filepath))}/{filename}"
+def upload_to_s3(filepath: str, s3_prefix: str, filename: str) -> None:
+    """Upload a splits file to S3 under the given prefix (e.g. 'ufl/2026-06-04')."""
+    s3_key = f"{s3_prefix}/{filename}"
     try:
         with open(filepath, "rb") as f:
             s3_client.put_object(
@@ -302,12 +486,20 @@ def upload_to_s3(filepath: str, league: str, filename: str) -> None:
         raise
 
 
-def save_game(game: dict, league: str, dry_run: bool) -> str:
+def save_game(game: dict, league: str, dry_run: bool,
+              source: str = "draftkings", out_subdir: str | None = None,
+              s3_prefix: str | None = None) -> str:
     date_str = parse_game_date(game["game_datetime"])
     sep      = "-vs-" if game["separator"].lower().startswith("v") else "@"
     filename = f"{game['participant1_slug']}{sep}{game['participant2_slug']}.json"
-    out_dir  = os.path.join(OUTPUT_DIR, league, date_str)
-    filepath = os.path.join(out_dir, filename)
+
+    # Default paths for DK; SAO caller passes explicit subdir/prefix
+    if out_subdir is None:
+        out_subdir = os.path.join(OUTPUT_DIR, league, date_str)
+    if s3_prefix is None:
+        s3_prefix = f"{league}/{date_str}"
+
+    filepath = os.path.join(out_subdir, filename)
 
     # Generate capture timestamp
     capture_time = datetime.now(timezone.utc).isoformat()
@@ -327,10 +519,13 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     capture_times = previous.get("captured_at_history", []) if previous else []
     capture_times.append(capture_time)
 
+    # Source label: "draftkings-network" or "betmgm_caesars"
+    source_label = "betmgm_caesars" if source == "betmgm_caesars" else "draftkings-network"
+
     record = {
         **game,
         "league":      league,
-        "source":      "draftkings-network",
+        "source":      source_label,
         "captured_at": capture_time,
         "mr_vegas_flag": mr_vegas_flag,
         **history,  # Historical arrays for plotting
@@ -340,16 +535,16 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
     if dry_run:
         log.info("[DRY RUN] %s → %s", game["matchup"], filepath)
     else:
-        os.makedirs(out_dir, exist_ok=True)
+        os.makedirs(out_subdir, exist_ok=True)
         with open(filepath, "w") as f:
             json.dump(record, f, indent=2)
 
         # Upload to S3
-        upload_to_s3(filepath, league, filename)
+        upload_to_s3(filepath, s3_prefix, filename)
 
         # Auto-generate and save plot
         if HAS_MATPLOTLIB:
-            plot_dir = os.path.join("plots", league, date_str)
+            plot_dir = os.path.join("plots", source, league, date_str)
             plot_filename = filename.replace(".json", ".png")
             plot_path = os.path.join(plot_dir, plot_filename)
             try:
@@ -363,16 +558,34 @@ def save_game(game: dict, league: str, dry_run: bool) -> str:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def run_once(league: str, dry_run: bool) -> list[str]:
-    event_group = EVENT_GROUPS.get(league)
-    if not event_group:
-        raise ValueError(f"Unknown league: {league}. Add to EVENT_GROUPS.")
+def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str]:
+    today = datetime.now().strftime("%Y-%m-%d")
 
-    url   = (f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
-             f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=Moneyline")
-    html  = fetch_rendered_html(url, league)
-    games = parse_splits_html(html)
-    log.info("Parsed %d games", len(games))
+    if source == "betmgm_caesars":
+        if league not in SAO_SPORTS:
+            raise ValueError(
+                f"League '{league}' not supported for betmgm_caesars. "
+                f"Choose from: {', '.join(SAO_SPORTS)}"
+            )
+        html  = fetch_sao_html(league)
+        games = parse_sao_games(html)
+        out_subdir = os.path.join(OUTPUT_DIR, "betmgm_caesars", league, today)
+        s3_prefix  = f"betmgm_caesars/{league}/{today}"
+        log.info("Parsed %d games from ScoresAndOdds (BetMGM+Caesars)", len(games))
+    else:
+        event_group = EVENT_GROUPS.get(league)
+        if not event_group:
+            raise ValueError(
+                f"League '{league}' not supported for draftkings. "
+                f"Choose from: {', '.join(EVENT_GROUPS)}"
+            )
+        url   = (f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
+                 f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=Moneyline")
+        html  = fetch_rendered_html(url, league)
+        games = parse_splits_html(html)
+        out_subdir = None  # save_game uses default
+        s3_prefix  = None  # save_game uses default
+        log.info("Parsed %d games from DraftKings Network", len(games))
 
     saved = []
     for game in games:
@@ -388,20 +601,31 @@ def run_once(league: str, dry_run: bool) -> list[str]:
             game["participant1_bets_pct"],   game["participant2_bets_pct"],
             sharp_label,
         )
-        path = save_game(game, league, dry_run)
+        path = save_game(game, league, dry_run,
+                         source=source, out_subdir=out_subdir, s3_prefix=s3_prefix)
         saved.append(path)
 
     return saved
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Capture DK betting splits")
-    parser.add_argument("--league",  default="ufl", choices=list(EVENT_GROUPS),
-                        help="Sport/league key. Known: " + ", ".join(f"{k}={v}" for k,v in EVENT_GROUPS.items()))
-    parser.add_argument("--dry-run", action="store_true", help="Print without saving")
+    parser = argparse.ArgumentParser(
+        description="Capture betting splits from DraftKings or BetMGM+Caesars (ScoresAndOdds)"
+    )
+    parser.add_argument(
+        "--league", default="ufl", choices=ALL_LEAGUES,
+        help="Sport/league. DK supports: " + ", ".join(EVENT_GROUPS) +
+             "  |  BetMGM+Caesars supports: " + ", ".join(SAO_SPORTS),
+    )
+    parser.add_argument(
+        "--source", default="draftkings",
+        choices=["draftkings", "betmgm_caesars"],
+        help="Data source. 'draftkings' = DK Network; 'betmgm_caesars' = ScoresAndOdds.com",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="Print without saving or uploading")
     args = parser.parse_args()
 
-    saved = run_once(args.league, args.dry_run)
+    saved = run_once(args.league, args.dry_run, source=args.source)
     log.info("Done — %d file(s) %s", len(saved), "would be saved" if args.dry_run else "saved")
     if saved:
         for p in saved:
