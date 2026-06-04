@@ -592,75 +592,143 @@ def save_game(game: dict, league: str, dry_run: bool,
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def _dk_fetch_all_types(event_group: str, league: str) -> list[dict]:
-    """Fetch Moneyline, Total and Spread from DK Network and merge by position."""
-    DK_BASE = ("https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
-               f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=")
+def _parse_dk_row(sodd) -> dict | None:
+    """Parse one tb-sodd element → {name, line, odds, handle_pct, bets_pct}."""
+    slip = sodd.find(class_="tb-slipline")
+    odd_el = sodd.find(class_="tb-odd-s")
+    if not slip or not odd_el:
+        return None
+    name = slip.get_text(" ", strip=True)
+    # Extract spread line from name if present (e.g. "ATL Braves -1.5" → line="-1.5")
+    line_m = re.search(r'([+\-][\d.]+)\s*$', name)
+    line = line_m.group(1) if line_m else None
 
-    ml_html = fetch_rendered_html(DK_BASE + "Moneyline", league)
-    ml_games = parse_splits_html(ml_html)
+    odds_text = odd_el.get_text(" ", strip=True).replace("opens in a new tab", "").strip()
+    odds_m = re.search(r'([+−\-]\d{2,4})', odds_text)
+    odds = odds_m.group(1).replace("−", "-") if odds_m else None
 
-    # Total
-    try:
-        tot_html  = fetch_rendered_html(DK_BASE + "Total", league)
-        tot_games = parse_splits_html(tot_html)
-    except Exception as e:
-        log.warning("DK Total fetch failed: %s", e)
-        tot_games = []
+    pcts = [int(m.group(1)) for m in re.finditer(r'(\d{1,3})%', sodd.get_text())]
+    return {
+        "name":       name,
+        "line":       line,
+        "odds":       odds,
+        "handle_pct": pcts[0] if len(pcts) > 0 else None,
+        "bets_pct":   pcts[1] if len(pcts) > 1 else None,
+    }
 
-    # Spread (may be named Runline/Puckline on DK depending on sport — try Spread first)
-    for spread_param in ("Spread", "Runline", "Puckline"):
-        try:
-            sp_html   = fetch_rendered_html(DK_BASE + spread_param, league)
-            sp_games  = parse_splits_html(sp_html)
-            if sp_games:
-                break
-        except Exception:
-            sp_games = []
 
-    log.info("DK parsed: %d moneyline, %d total, %d spread games",
-             len(ml_games), len(tot_games), len(sp_games))
+def parse_dk_all_html(html: str) -> list[dict]:
+    """Parse DraftKings tb_emt=0 ('All') page — one fetch for Moneyline + Spread + Total.
 
-    # Merge by position; convert Total/Spread DK records into our nested format
-    combined = []
-    for i, ml in enumerate(ml_games):
-        game = dict(ml)
-        if i < len(tot_games):
-            t = tot_games[i]
-            # DK Total: p1 = "Over X.X", p2 = "Under X.X"
-            line_m = re.search(r'[\d.]+', t.get("participant1", "") or "")
-            game["total"] = {
-                "line":             line_m.group() if line_m else None,
-                "over_bets_pct":    t.get("participant1_bets_pct"),
-                "under_bets_pct":   t.get("participant2_bets_pct"),
-                "over_handle_pct":  t.get("participant1_handle_pct"),
-                "under_handle_pct": t.get("participant2_handle_pct"),
-                "over_odds":        t.get("participant1_odds"),
-                "under_odds":       t.get("participant2_odds"),
-                "over_sharp_delta": t.get("p1_sharp_delta"),
-            }
-        if i < len(sp_games):
-            s = sp_games[i]
-            # DK Spread: p1/p2 names include the spread (e.g. "TOR +1.5")
-            def _extract_line(name: str | None) -> str | None:
-                if not name:
-                    return None
-                lm = re.search(r'[+\-][\d.]+', name)
-                return lm.group() if lm else None
-            game["spread"] = {
-                "participant1_line":       _extract_line(s.get("participant1")),
-                "participant2_line":       _extract_line(s.get("participant2")),
-                "participant1_bets_pct":   s.get("participant1_bets_pct"),
-                "participant2_bets_pct":   s.get("participant2_bets_pct"),
-                "participant1_handle_pct": s.get("participant1_handle_pct"),
-                "participant2_handle_pct": s.get("participant2_handle_pct"),
-                "participant1_odds":       s.get("participant1_odds"),
-                "participant2_odds":       s.get("participant2_odds"),
-                "p1_sharp_delta":          s.get("p1_sharp_delta"),
-                "p2_sharp_delta":          s.get("p2_sharp_delta"),
-            }
-        combined.append(game)
-    return combined
+    Each game block (tb-se) contains multiple tb-market-wrap sections labelled by
+    tb-se-head: 'Moneyline', 'Run Line'/'Spread'/'Puckline', 'Total'.
+    The tb-slipline element carries the participant name WITH the spread line
+    (e.g. 'ATL Braves -1.5'), solving the null-line problem of the old 3-fetch approach.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    games = []
+
+    for block in soup.find_all("div", class_="tb-se"):
+        title_el = block.find(class_="tb-se-title")
+        if not title_el:
+            continue
+        title_text = title_el.get_text(" ", strip=True)
+        sep_m = re.search(r'(.+?)\s+(@|vs\.?)\s+(.+?)(?:\s+opens|\s*$)', title_text, re.IGNORECASE)
+        if not sep_m:
+            continue
+        p1_name   = sep_m.group(1).strip()
+        separator = sep_m.group(2).strip()
+        p2_name   = sep_m.group(3).strip()
+
+        dt_m    = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', title_text, re.IGNORECASE)
+        game_dt = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
+
+        ml_data = spread_data = total_data = None
+
+        # Structure: tb-market-wrap > (tb-se-head, tb-sm)+ pairs.
+        # tb-sm wraps the participant rows for one bet type; tb-se-head is its preceding sibling.
+        for sm in block.find_all(class_="tb-sm"):
+            head = sm.find_previous_sibling(class_="tb-se-head")
+            if not head:
+                continue
+            head_text = head.get_text(" ", strip=True).lower()
+            rows = [r for r in (_parse_dk_row(s) for s in sm.find_all("div", class_="tb-sodd")) if r]
+            if len(rows) < 2:
+                continue
+
+            if "moneyline" in head_text:
+                # Rows ordered: home first on DK — identify by name match
+                r2 = next((r for r in rows if p2_name.split()[0].lower() in r["name"].lower()), rows[1])
+                r1 = next((r for r in rows if r is not r2), rows[0])
+                sharp2 = (r2["handle_pct"] - r2["bets_pct"]
+                          if r2["handle_pct"] is not None and r2["bets_pct"] is not None else None)
+                ml_data = {
+                    "participant1_odds":       r1["odds"],
+                    "participant2_odds":       r2["odds"],
+                    "participant1_handle_pct": r1["handle_pct"],
+                    "participant2_handle_pct": r2["handle_pct"],
+                    "participant1_bets_pct":   r1["bets_pct"],
+                    "participant2_bets_pct":   r2["bets_pct"],
+                    "p2_sharp_delta": sharp2,
+                    "p1_sharp_delta": -sharp2 if sharp2 is not None else None,
+                }
+
+            elif any(k in head_text for k in ("run line", "spread", "puckline", "runline")):
+                r2 = next((r for r in rows if p2_name.split()[0].lower() in r["name"].lower()), rows[1])
+                r1 = next((r for r in rows if r is not r2), rows[0])
+                sharp2 = (r2["handle_pct"] - r2["bets_pct"]
+                          if r2["handle_pct"] is not None and r2["bets_pct"] is not None else None)
+                spread_data = {
+                    "participant1_line":       r1["line"],
+                    "participant2_line":       r2["line"],
+                    "participant1_odds":       r1["odds"],
+                    "participant2_odds":       r2["odds"],
+                    "participant1_handle_pct": r1["handle_pct"],
+                    "participant2_handle_pct": r2["handle_pct"],
+                    "participant1_bets_pct":   r1["bets_pct"],
+                    "participant2_bets_pct":   r2["bets_pct"],
+                    "p1_sharp_delta": -sharp2 if sharp2 is not None else None,
+                    "p2_sharp_delta": sharp2,
+                }
+
+            elif "total" in head_text:
+                over_r  = next((r for r in rows if "over"  in r["name"].lower()), rows[0])
+                under_r = next((r for r in rows if "under" in r["name"].lower()), rows[1])
+                line_m  = re.search(r'[\d.]+', over_r["name"])
+                sharp_over = (over_r["handle_pct"] - over_r["bets_pct"]
+                              if over_r["handle_pct"] is not None and over_r["bets_pct"] is not None else None)
+                total_data = {
+                    "line":             line_m.group() if line_m else None,
+                    "over_bets_pct":    over_r["bets_pct"],
+                    "under_bets_pct":   under_r["bets_pct"],
+                    "over_handle_pct":  over_r["handle_pct"],
+                    "under_handle_pct": under_r["handle_pct"],
+                    "over_odds":        over_r["odds"],
+                    "under_odds":       under_r["odds"],
+                    "over_sharp_delta": sharp_over,
+                }
+
+        if ml_data is None:
+            continue
+
+        matchup_str = f"{p1_name} @ {p2_name}" if separator == "@" else f"{p1_name} vs {p2_name}"
+        game = {
+            "matchup":            matchup_str,
+            "separator":          separator,
+            "participant1":       p1_name,
+            "participant2":       p2_name,
+            "participant1_slug":  participant_slug(p1_name),
+            "participant2_slug":  participant_slug(p2_name),
+            "game_datetime":      game_dt,
+            **ml_data,
+        }
+        if total_data:
+            game["total"] = total_data
+        if spread_data:
+            game["spread"] = spread_data
+        games.append(game)
+
+    return games
 
 
 def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str]:
@@ -684,9 +752,13 @@ def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str
                 f"League '{league}' not supported for draftkings. "
                 f"Choose from: {', '.join(EVENT_GROUPS)}"
             )
-        games      = _dk_fetch_all_types(event_group, league)
-        out_subdir = None  # save_game uses default
-        s3_prefix  = None  # save_game uses default
+        url   = (f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
+                 f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=0")
+        html  = fetch_rendered_html(url, league)
+        games = parse_dk_all_html(html)
+        out_subdir = os.path.join(OUTPUT_DIR, "draftkings", league, today)
+        s3_prefix  = f"draftkings/{league}/{today}"
+        log.info("Parsed %d games from DraftKings Network (All types)", len(games))
 
     saved = []
     for game in games:
