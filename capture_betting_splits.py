@@ -170,140 +170,170 @@ def fetch_sao_html(sport: str) -> str:
 
 
 def parse_sao_games(html: str) -> list[dict]:
-    """Parse ScoresAndOdds consensus picks page (MONEYLINE tab default).
+    """Parse all three bet-type tabs from one ScoresAndOdds consensus page.
 
-    The page renders abbreviations in the splits section:
-      TOR  % OF BETS  ATL   13%  87%   18%  82%  % OF MONEY
-      BEST AWAY ODDS +220   BEST HOME ODDS -250
+    All tabs (moneyline, total, spread/runline/puckline) are present in the
+    same rendered HTML. Match them by position — DraftKings and SAO both
+    return games in the same order across tabs.
 
-    Falls back to text regex when CSS structure is unknown.
+    Page text patterns per tab:
+      Moneyline: TOR % OF BETS ATL  13% 87%  18% 82%  BEST AWAY +220  BEST HOME -250
+      Total:     OVER (o7.5) % OF BETS UNDER (u7.5)  94% 6%  90% 10%  BEST OVER even  BEST UNDER -110
+      Spread:    TOR (+1.5) % OF BETS ATL (-1.5)  12% 88%  13% 87%  BEST AWAY even  BEST HOME -110
     """
     soup = BeautifulSoup(html, "lxml")
-    games = []
-
-    # ── Strategy 1: CSS-selector based (inspect rendered HTML to refine) ──────
-    # Try common scoresandodds game card classes
-    card_selectors = [
-        "div.consensus-game", "div.game-card", "div.splits-game",
-        "div[class*='game']", "div[class*='consensus']",
-    ]
-    cards = []
-    for sel in card_selectors:
-        cards = soup.select(sel)
-        if cards:
-            log.info("Found %d game cards via selector: %s", len(cards), sel)
-            break
-
-    if cards:
-        for card in cards:
-            text = card.get_text(" ", strip=True)
-            game = _parse_sao_card_text(text)
-            if game:
-                games.append(game)
-        if games:
-            return games
-
-    # ── Strategy 2: Full-page text regex fallback ─────────────────────────────
-    log.info("CSS selectors found no cards — falling back to full-page text regex")
     full_text = soup.get_text(" ", strip=True)
-    # Log a snippet to help diagnose HTML structure in dry-run mode
-    log.debug("Page text snippet (first 500 chars): %s", full_text[:500])
 
-    # Scan for blocks: ABBR % OF BETS ABBR bets1% bets2% handle1% handle2%
-    pattern = re.compile(
-        r'([A-Z]{2,5})\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+([A-Z]{2,5})'
-        r'\s+(\d{1,3})%\s+(\d{1,3})%'   # bets pcts
-        r'\s+(\d{1,3})%\s+(\d{1,3})%',  # handle pcts (after % OF MONEY label)
-        re.DOTALL,
-    )
-    odds_pattern = re.compile(
-        r'BEST\s+AWAY\s+ODDS\s+([+\-]\d+).*?BEST\s+HOME\s+ODDS\s+([+\-]\d+)',
-        re.DOTALL | re.IGNORECASE,
-    )
-    dt_pattern = re.compile(r'(\d{1,2}/\d{1,2})\s+(\d{1,2}:\d{2}(?:AM|PM))', re.IGNORECASE)
+    ml_list     = _sao_parse_moneyline(full_text)
+    total_list  = _sao_parse_total(full_text)
+    spread_list = _sao_parse_spread(full_text)
 
-    pos = 0
-    for m in pattern.finditer(full_text):
-        away_slug = m.group(1)
-        home_slug = m.group(2)
-        bets_away, bets_home     = int(m.group(3)), int(m.group(4))
-        handle_away, handle_home = int(m.group(5)), int(m.group(6))
+    log.info("SAO parsed: %d moneyline, %d total, %d spread games",
+             len(ml_list), len(total_list), len(spread_list))
 
-        # Look for odds in the ~300 chars after the pct match
-        segment = full_text[m.start():m.end() + 300]
-        odds_m = odds_pattern.search(segment)
-        odds_away = odds_m.group(1) if odds_m else None
-        odds_home = odds_m.group(2) if odds_m else None
-
-        # Look for game datetime in the 200 chars before the match
-        pre = full_text[max(0, m.start() - 200):m.start()]
-        dt_m = dt_pattern.search(pre)
-        game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
-
-        sharp_home = handle_home - bets_home
-        games.append({
-            "matchup":            f"{away_slug} @ {home_slug}",
-            "separator":          "@",
-            "participant1":       away_slug,
-            "participant2":       home_slug,
-            "participant1_slug":  away_slug,
-            "participant2_slug":  home_slug,
-            "game_datetime":      game_dt,
-            "participant1_odds":        odds_away,
-            "participant2_odds":        odds_home,
-            "participant1_handle_pct":  handle_away,
-            "participant2_handle_pct":  handle_home,
-            "participant1_bets_pct":    bets_away,
-            "participant2_bets_pct":    bets_home,
-            "p2_sharp_delta": sharp_home,
-            "p1_sharp_delta": -sharp_home,
-        })
-        pos = m.end()
-
+    games = []
+    for i, ml in enumerate(ml_list):
+        game = dict(ml)
+        if i < len(total_list):
+            game["total"] = total_list[i]
+        if i < len(spread_list):
+            game["spread"] = spread_list[i]
+        games.append(game)
     return games
 
 
-def _parse_sao_card_text(text: str) -> dict | None:
-    """Parse a single game card's text into a splits dict."""
-    m = re.search(
-        r'([A-Z]{2,5})\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+([A-Z]{2,5})'
-        r'\s+(\d{1,3})%\s+(\d{1,3})%\s+(\d{1,3})%\s+(\d{1,3})%',
-        text,
+def _sao_pcts_odds(text: str, start: int, is_total: bool = False) -> tuple:
+    """Extract (bets1, bets2, handle1, handle2, odds1, odds2) from text after a % OF BETS match.
+
+    Page layout (all tabs): bets bars THEN handle bars THEN '% of Money' label THEN odds.
+    All percentages appear BEFORE '% of Money'.
+
+    Total quirk: when one side is dominant (e.g. OVER 94%), the minority bets
+    bar (6%) may not render as text. Pattern becomes:
+      4 pcts → [bets1, bets2, handle1, handle2]  (both sides shown)
+      3 pcts → [bets1, handle1, handle2]          (minority bets omitted; bets2=100-bets1)
+      2 pcts → [handle1, handle2]                 (only handle shown)
+    """
+    segment = text[start:start + 500]
+
+    # Find the '% of Money' / '% OF MONEY' label which comes AFTER all pcts
+    money_m = re.search(r'%\s+[Oo]f\s+[Mm]oney|%\s+OF\s+MONEY', segment)
+    if money_m:
+        pct_block = segment[:money_m.start()]
+    else:
+        # No label found — take first 200 chars to avoid bleeding into next game
+        pct_block = segment[:200]
+
+    pcts = [int(m.group()) for m in re.finditer(r'\b(\d{1,3})(?=%)', pct_block)]
+
+    if len(pcts) >= 4:
+        bets1, bets2, handle1, handle2 = pcts[0], pcts[1], pcts[2], pcts[3]
+    elif len(pcts) == 3 and is_total:
+        # Minority bets pct not shown — derive it
+        if pcts[0] + pcts[1] == 100:
+            # First two are bets, third is one handle side
+            bets1, bets2, handle1 = pcts[0], pcts[1], pcts[2]
+            handle2 = 100 - handle1
+        else:
+            # First is dominant bets; second/third are handle
+            bets1, handle1, handle2 = pcts[0], pcts[1], pcts[2]
+            bets2 = 100 - bets1
+    elif len(pcts) == 3:
+        bets1, bets2, handle1, handle2 = pcts[0], pcts[1], pcts[2], None
+    elif len(pcts) == 2:
+        bets1, bets2, handle1, handle2 = pcts[0], pcts[1], None, None
+    else:
+        return None, None, None, None, None, None
+
+    if is_total:
+        o1_m = re.search(r'[Bb]est\s+[Oo]ver\s+[ou][\d.]*\s+([+\-]?\d+|even)', segment, re.IGNORECASE)
+        o2_m = re.search(r'[Bb]est\s+[Uu]nder\s+[ou][\d.]*\s+([+\-]?\d+|even)', segment, re.IGNORECASE)
+    else:
+        o1_m = re.search(r'[Bb]est\s+[Aa]way\s+[Oo]dds\s+([+\-]?\d+|even)', segment, re.IGNORECASE)
+        o2_m = re.search(r'[Bb]est\s+[Hh]ome\s+[Oo]dds\s+([+\-]?\d+|even)', segment, re.IGNORECASE)
+    odds1 = o1_m.group(1) if o1_m else None
+    odds2 = o2_m.group(1) if o2_m else None
+    return bets1, bets2, handle1, handle2, odds1, odds2
+
+
+def _sao_parse_moneyline(text: str) -> list[dict]:
+    """Moneyline: plain 2-5 letter slug % OF BETS slug ..."""
+    dt_pat  = re.compile(r'(\d{1,2}/\d{1,2})\s+(\d{1,2}:\d{2}(?:AM|PM))', re.IGNORECASE)
+    # Must NOT be preceded by ( which would indicate a spread line
+    pat = re.compile(
+        r'(?<!\))\s([A-Z]{2,5})\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+([A-Z]{2,5})\s+(?!\()',
     )
-    if not m:
-        return None
-    away_slug, home_slug = m.group(1), m.group(2)
-    bets_away, bets_home     = int(m.group(3)), int(m.group(4))
-    handle_away, handle_home = int(m.group(5)), int(m.group(6))
+    results = []
+    for m in pat.finditer(text):
+        away, home = m.group(1), m.group(2)
+        b1, b2, h1, h2, o1, o2 = _sao_pcts_odds(text, m.end())
+        if b1 is None:
+            continue
+        pre = text[max(0, m.start() - 200):m.start()]
+        dt_m = dt_pat.search(pre)
+        game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
+        sharp2 = (h2 - b2) if h2 is not None and b2 is not None else None
+        results.append({
+            "matchup": f"{away} @ {home}", "separator": "@",
+            "participant1": away, "participant2": home,
+            "participant1_slug": away, "participant2_slug": home,
+            "game_datetime": game_dt,
+            "participant1_odds": o1, "participant2_odds": o2,
+            "participant1_handle_pct": h1, "participant2_handle_pct": h2,
+            "participant1_bets_pct": b1, "participant2_bets_pct": b2,
+            "p2_sharp_delta": sharp2, "p1_sharp_delta": -sharp2 if sharp2 is not None else None,
+        })
+    return results
 
-    odds_m = re.search(
-        r'BEST\s+AWAY\s+ODDS\s+([+\-]\d+).*?BEST\s+HOME\s+ODDS\s+([+\-]\d+)',
-        text, re.IGNORECASE | re.DOTALL,
+
+def _sao_parse_total(text: str) -> list[dict]:
+    """Total: OVER (oX.X) % OF BETS UNDER (uX.X) ..."""
+    pat = re.compile(
+        r'OVER\s*\(([oO][\d.]+)\)\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+UNDER\s*\(([uU][\d.]+)\)',
+        re.IGNORECASE,
     )
-    odds_away = odds_m.group(1) if odds_m else None
-    odds_home = odds_m.group(2) if odds_m else None
+    results = []
+    for m in pat.finditer(text):
+        over_line  = m.group(1)
+        under_line = m.group(2)
+        line_val   = re.search(r'[\d.]+', over_line)
+        line       = line_val.group() if line_val else None
+        b1, b2, h1, h2, o1, o2 = _sao_pcts_odds(text, m.end(), is_total=True)
+        if b1 is None:
+            continue
+        sharp_over = (h1 - b1) if h1 is not None and b1 is not None else None
+        results.append({
+            "line": line,
+            "over_bets_pct": b1, "under_bets_pct": b2,
+            "over_handle_pct": h1, "under_handle_pct": h2,
+            "over_odds": o1, "under_odds": o2,
+            "over_sharp_delta": sharp_over,
+        })
+    return results
 
-    dt_m = re.search(r'(\d{1,2}/\d{1,2})\s+(\d{1,2}:\d{2}(?:AM|PM))', text, re.IGNORECASE)
-    game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
 
-    sharp_home = handle_home - bets_home
-    return {
-        "matchup":            f"{away_slug} @ {home_slug}",
-        "separator":          "@",
-        "participant1":       away_slug,
-        "participant2":       home_slug,
-        "participant1_slug":  away_slug,
-        "participant2_slug":  home_slug,
-        "game_datetime":      game_dt,
-        "participant1_odds":        odds_away,
-        "participant2_odds":        odds_home,
-        "participant1_handle_pct":  handle_away,
-        "participant2_handle_pct":  handle_home,
-        "participant1_bets_pct":    bets_away,
-        "participant2_bets_pct":    bets_home,
-        "p2_sharp_delta": sharp_home,
-        "p1_sharp_delta": -sharp_home,
-    }
+def _sao_parse_spread(text: str) -> list[dict]:
+    """Spread/Runline/Puckline: ABBR (±X.X) % OF BETS ABBR (±X.X) ..."""
+    pat = re.compile(
+        r'([A-Z]{2,5})\s*\(([+\-][\d.]+)\)\s+%\s*[Oo][Ff]\s+[Bb][Ee][Tt][Ss]\s+'
+        r'([A-Z]{2,5})\s*\(([+\-][\d.]+)\)',
+    )
+    results = []
+    for m in pat.finditer(text):
+        slug1, line1, slug2, line2 = m.group(1), m.group(2), m.group(3), m.group(4)
+        b1, b2, h1, h2, o1, o2 = _sao_pcts_odds(text, m.end())
+        if b1 is None:
+            continue
+        sharp2 = (h2 - b2) if h2 is not None and b2 is not None else None
+        results.append({
+            "participant1_line": line1, "participant2_line": line2,
+            "participant1_bets_pct": b1, "participant2_bets_pct": b2,
+            "participant1_handle_pct": h1, "participant2_handle_pct": h2,
+            "participant1_odds": o1, "participant2_odds": o2,
+            "p1_sharp_delta": -sharp2 if sharp2 is not None else None,
+            "p2_sharp_delta": sharp2,
+        })
+    return results
 
 
 # ── HTML parser (BeautifulSoup — robust against whitespace) ───────────────────
@@ -425,31 +455,35 @@ def build_history_arrays(current: dict, previous: dict | None) -> dict:
     """Build historical arrays for tracking market movement over time."""
     history = {}
 
-    # If no previous record, start fresh arrays with current values
-    if previous is None:
-        tracked_keys = [
-            "participant1_handle_pct", "participant2_handle_pct",
-            "participant1_bets_pct", "participant2_bets_pct",
-            "p1_sharp_delta", "p2_sharp_delta",
-            "participant1_odds", "participant2_odds",
-        ]
-        for key in tracked_keys:
-            val = current.get(key)
-            history[f"{key}_history"] = [val] if val is not None else []
-        return history
-
-    # Append current values to previous history arrays
-    tracked_keys = [
+    ML_KEYS = [
         "participant1_handle_pct", "participant2_handle_pct",
         "participant1_bets_pct", "participant2_bets_pct",
         "p1_sharp_delta", "p2_sharp_delta",
         "participant1_odds", "participant2_odds",
     ]
-    for key in tracked_keys:
-        hist_key = f"{key}_history"
-        prev_hist = previous.get(hist_key, [])
-        # Preserve previous history and append current value
-        history[hist_key] = prev_hist + [current.get(key)]
+    TOTAL_KEYS  = ["over_bets_pct", "under_bets_pct", "over_handle_pct",
+                   "under_handle_pct", "over_odds", "under_odds", "over_sharp_delta"]
+    SPREAD_KEYS = ["participant1_bets_pct", "participant2_bets_pct",
+                   "participant1_handle_pct", "participant2_handle_pct",
+                   "participant1_odds", "participant2_odds",
+                   "p1_sharp_delta", "p2_sharp_delta"]
+
+    def _build(source: dict, prev_source: dict | None, keys: list, prefix: str = "") -> None:
+        for key in keys:
+            hist_key = f"{prefix}{key}_history"
+            val = source.get(key) if source else None
+            if prev_source is None:
+                history[hist_key] = [val] if val is not None else []
+            else:
+                prev_hist = (previous or {}).get(hist_key, [])
+                history[hist_key] = prev_hist + [val]
+
+    _build(current, previous, ML_KEYS)
+
+    cur_total  = current.get("total")
+    cur_spread = current.get("spread")
+    _build(cur_total,  previous, TOTAL_KEYS,  prefix="total_")
+    _build(cur_spread, previous, SPREAD_KEYS, prefix="spread_")
 
     return history
 
@@ -528,8 +562,8 @@ def save_game(game: dict, league: str, dry_run: bool,
         "source":      source_label,
         "captured_at": capture_time,
         "mr_vegas_flag": mr_vegas_flag,
-        **history,  # Historical arrays for plotting
-        "captured_at_history": capture_times,  # Explicit capture times
+        **history,          # ML + total_ + spread_ history arrays
+        "captured_at_history": capture_times,
     }
 
     if dry_run:
@@ -558,6 +592,77 @@ def save_game(game: dict, league: str, dry_run: bool,
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+def _dk_fetch_all_types(event_group: str, league: str) -> list[dict]:
+    """Fetch Moneyline, Total and Spread from DK Network and merge by position."""
+    DK_BASE = ("https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
+               f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=")
+
+    ml_html = fetch_rendered_html(DK_BASE + "Moneyline", league)
+    ml_games = parse_splits_html(ml_html)
+
+    # Total
+    try:
+        tot_html  = fetch_rendered_html(DK_BASE + "Total", league)
+        tot_games = parse_splits_html(tot_html)
+    except Exception as e:
+        log.warning("DK Total fetch failed: %s", e)
+        tot_games = []
+
+    # Spread (may be named Runline/Puckline on DK depending on sport — try Spread first)
+    for spread_param in ("Spread", "Runline", "Puckline"):
+        try:
+            sp_html   = fetch_rendered_html(DK_BASE + spread_param, league)
+            sp_games  = parse_splits_html(sp_html)
+            if sp_games:
+                break
+        except Exception:
+            sp_games = []
+
+    log.info("DK parsed: %d moneyline, %d total, %d spread games",
+             len(ml_games), len(tot_games), len(sp_games))
+
+    # Merge by position; convert Total/Spread DK records into our nested format
+    combined = []
+    for i, ml in enumerate(ml_games):
+        game = dict(ml)
+        if i < len(tot_games):
+            t = tot_games[i]
+            # DK Total: p1 = "Over X.X", p2 = "Under X.X"
+            line_m = re.search(r'[\d.]+', t.get("participant1", "") or "")
+            game["total"] = {
+                "line":             line_m.group() if line_m else None,
+                "over_bets_pct":    t.get("participant1_bets_pct"),
+                "under_bets_pct":   t.get("participant2_bets_pct"),
+                "over_handle_pct":  t.get("participant1_handle_pct"),
+                "under_handle_pct": t.get("participant2_handle_pct"),
+                "over_odds":        t.get("participant1_odds"),
+                "under_odds":       t.get("participant2_odds"),
+                "over_sharp_delta": t.get("p1_sharp_delta"),
+            }
+        if i < len(sp_games):
+            s = sp_games[i]
+            # DK Spread: p1/p2 names include the spread (e.g. "TOR +1.5")
+            def _extract_line(name: str | None) -> str | None:
+                if not name:
+                    return None
+                lm = re.search(r'[+\-][\d.]+', name)
+                return lm.group() if lm else None
+            game["spread"] = {
+                "participant1_line":       _extract_line(s.get("participant1")),
+                "participant2_line":       _extract_line(s.get("participant2")),
+                "participant1_bets_pct":   s.get("participant1_bets_pct"),
+                "participant2_bets_pct":   s.get("participant2_bets_pct"),
+                "participant1_handle_pct": s.get("participant1_handle_pct"),
+                "participant2_handle_pct": s.get("participant2_handle_pct"),
+                "participant1_odds":       s.get("participant1_odds"),
+                "participant2_odds":       s.get("participant2_odds"),
+                "p1_sharp_delta":          s.get("p1_sharp_delta"),
+                "p2_sharp_delta":          s.get("p2_sharp_delta"),
+            }
+        combined.append(game)
+    return combined
+
+
 def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str]:
     today = datetime.now().strftime("%Y-%m-%d")
 
@@ -579,13 +684,9 @@ def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str
                 f"League '{league}' not supported for draftkings. "
                 f"Choose from: {', '.join(EVENT_GROUPS)}"
             )
-        url   = (f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
-                 f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=Moneyline")
-        html  = fetch_rendered_html(url, league)
-        games = parse_splits_html(html)
+        games      = _dk_fetch_all_types(event_group, league)
         out_subdir = None  # save_game uses default
         s3_prefix  = None  # save_game uses default
-        log.info("Parsed %d games from DraftKings Network", len(games))
 
     saved = []
     for game in games:

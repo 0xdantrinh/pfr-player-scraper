@@ -138,68 +138,97 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
     except Exception:
         times = list(range(len(handle_p1)))
     
-    # Create figure with subplots
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 10))
+    # Total and spread history arrays (may be absent for older records)
+    tot_over_bets    = game_data.get("total_over_bets_pct_history", [])
+    tot_under_bets   = game_data.get("total_under_bets_pct_history", [])
+    tot_over_handle  = game_data.get("total_over_handle_pct_history", [])
+    tot_under_handle = game_data.get("total_under_handle_pct_history", [])
+    sp_p1_bets       = game_data.get("spread_participant1_bets_pct_history", [])
+    sp_p2_bets       = game_data.get("spread_participant2_bets_pct_history", [])
+    sp_p1_handle     = game_data.get("spread_participant1_handle_pct_history", [])
+    sp_p2_handle     = game_data.get("spread_participant2_handle_pct_history", [])
+
+    has_total  = bool(tot_over_bets)
+    has_spread = bool(sp_p1_bets)
+
+    # Dynamic layout: 3 rows (ML handle, ML bets, ML odds)
+    # + 2 rows for total + 2 rows for spread when data present
+    extra = (2 if has_total else 0) + (2 if has_spread else 0)
+    n_rows = 3 + extra
+    fig, axes = plt.subplots(n_rows, 1, figsize=(12, 4 + n_rows * 2.5))
     fig.suptitle(f"Market Movement: {matchup}", fontsize=14, fontweight="bold")
-    
-    # Handle percentage
-    ax1.plot(times, handle_p1, marker="o", label=f"{p1_name} Handle", linewidth=2, alpha=0.8, linestyle="-")
-    ax1.plot(times, handle_p2, marker="s", label=f"{p2_name} Handle", linewidth=2, alpha=0.8, linestyle="--")
-    ax1.axhline(y=30, color="gray", linestyle="--", linewidth=2.5, alpha=0.6, label="30% Threshold")
+    ax1, ax2, ax3 = axes[0], axes[1], axes[2]
+    extra_axes = list(axes[3:])
 
-    # Add value labels on points
-    for i, (t, v) in enumerate(zip(times, handle_p1)):
-        ax1.text(t, v + 3, f"{v}%", fontsize=9, ha="center", va="bottom", color="C0")
-    for i, (t, v) in enumerate(zip(times, handle_p2)):
-        ax1.text(t, v - 3, f"{v}%", fontsize=9, ha="center", va="top", color="C1")
+    def _plot_pct_ax(ax, t, series1, series2, label1, label2, title):
+        ax.plot(t, series1, marker="o", label=label1, linewidth=2, alpha=0.8)
+        ax.plot(t, series2, marker="s", label=label2, linewidth=2, alpha=0.8, linestyle="--")
+        ax.axhline(y=30, color="gray", linestyle="--", linewidth=1.5, alpha=0.5, label="30%")
+        for tv, v in zip(t, series1):
+            ax.text(tv, v + 2.5, f"{v}%", fontsize=8, ha="center", va="bottom", color="C0")
+        for tv, v in zip(t, series2):
+            ax.text(tv, v - 2.5, f"{v}%", fontsize=8, ha="center", va="top", color="C1")
+        ax.set_title(title, fontsize=11, fontweight="bold")
+        ax.set_ylim(0, 100)
+        ax.legend(loc="best", fontsize=9)
+        ax.grid(True, alpha=0.3)
 
-    ax1.set_ylabel("Handle %", fontsize=11)
-    ax1.set_title("Money Wagered (Handle %)", fontsize=12, fontweight="bold")
-    ax1.legend(loc="best")
-    ax1.grid(True, alpha=0.3)
-    ax1.set_ylim(0, 100)
+    # ── Row 1: Moneyline Handle ───────────────────────────────────────────────
+    _plot_pct_ax(ax1, times, handle_p1, handle_p2,
+                 f"{p1_name} Handle", f"{p2_name} Handle", "Moneyline — Handle %")
+    ax1.set_ylabel("Handle %", fontsize=10)
 
-    # Betting tickets percentage
-    ax2.plot(times, bets_p1, marker="o", label=f"{p1_name} Bets", linewidth=2, alpha=0.8, linestyle="-")
-    ax2.plot(times, bets_p2, marker="s", label=f"{p2_name} Bets", linewidth=2, alpha=0.8, linestyle="--")
-    ax2.axhline(y=30, color="gray", linestyle="--", linewidth=2.5, alpha=0.6, label="30% Threshold")
+    # ── Row 2: Moneyline Bets ─────────────────────────────────────────────────
+    _plot_pct_ax(ax2, times, bets_p1, bets_p2,
+                 f"{p1_name} Bets", f"{p2_name} Bets", "Moneyline — Bets %")
+    ax2.set_ylabel("Bets %", fontsize=10)
 
-    # Add value labels on points
-    for i, (t, v) in enumerate(zip(times, bets_p1)):
-        ax2.text(t, v + 3, f"{v}%", fontsize=9, ha="center", va="bottom", color="C0")
-    for i, (t, v) in enumerate(zip(times, bets_p2)):
-        ax2.text(t, v - 3, f"{v}%", fontsize=9, ha="center", va="top", color="C1")
-
-    ax2.set_ylabel("Bets %", fontsize=11)
-    ax2.set_title("Public Tickets (Bets %)", fontsize=12, fontweight="bold")
-    ax2.legend(loc="best")
-    ax2.grid(True, alpha=0.3)
-    ax2.set_ylim(0, 100)
-    
-    # Odds movement
+    # ── Row 3: Moneyline Odds ─────────────────────────────────────────────────
     if odds_p1 or odds_p2:
-        # Convert odds strings to numeric values
-        odds_p1_numeric = [parse_odds(x) for x in odds_p1]
-        odds_p2_numeric = [parse_odds(x) for x in odds_p2]
-        odds_p1_clean = [x for x in odds_p1_numeric if x is not None]
-        odds_p2_clean = [x for x in odds_p2_numeric if x is not None]
-        if odds_p1_clean or odds_p2_clean:
-            if odds_p1_clean:
-                ax3.plot(times, odds_p1_numeric, marker="o", label=f"{p1_name} Odds", linewidth=2, alpha=0.8, linestyle="-")
-            if odds_p2_clean:
-                ax3.plot(times, odds_p2_numeric, marker="s", label=f"{p2_name} Odds", linewidth=2, alpha=0.8, linestyle="--")
-            ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
-            ax3.set_ylabel("Odds", fontsize=11)
-            ax3.set_xlabel("Capture Time", fontsize=11)
-            ax3.set_title("Line Movement", fontsize=12, fontweight="bold")
-            ax3.legend(loc="best")
-            ax3.grid(True, alpha=0.3)
-    
-    # Format x-axis
+        odds_p1_num = [parse_odds(x) for x in odds_p1]
+        odds_p2_num = [parse_odds(x) for x in odds_p2]
+        if any(x is not None for x in odds_p1_num):
+            ax3.plot(times, odds_p1_num, marker="o", label=f"{p1_name} Odds", linewidth=2)
+        if any(x is not None for x in odds_p2_num):
+            ax3.plot(times, odds_p2_num, marker="s", label=f"{p2_name} Odds", linewidth=2, linestyle="--")
+        ax3.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+        ax3.set_ylabel("Odds", fontsize=10)
+        ax3.set_title("Moneyline — Line Movement", fontsize=11, fontweight="bold")
+        ax3.legend(loc="best", fontsize=9)
+        ax3.grid(True, alpha=0.3)
+
+    # ── Rows 4-5: Total (if present) ─────────────────────────────────────────
+    if has_total and len(extra_axes) >= 2:
+        t_times = times[:len(tot_over_bets)]
+        _plot_pct_ax(extra_axes[0], t_times,
+                     tot_over_handle, tot_under_handle,
+                     "Over Handle", "Under Handle", "Total — Handle %")
+        extra_axes[0].set_ylabel("Handle %", fontsize=10)
+        _plot_pct_ax(extra_axes[1], t_times,
+                     tot_over_bets, tot_under_bets,
+                     "Over Bets", "Under Bets", "Total — Bets %")
+        extra_axes[1].set_ylabel("Bets %", fontsize=10)
+        extra_axes = extra_axes[2:]
+
+    # ── Rows 6-7: Spread/Runline/Puckline (if present) ───────────────────────
+    if has_spread and len(extra_axes) >= 2:
+        s_times = times[:len(sp_p1_bets)]
+        _plot_pct_ax(extra_axes[0], s_times,
+                     sp_p1_handle, sp_p2_handle,
+                     f"{p1_name} Handle", f"{p2_name} Handle", "Spread/Runline — Handle %")
+        extra_axes[0].set_ylabel("Handle %", fontsize=10)
+        _plot_pct_ax(extra_axes[1], s_times,
+                     sp_p1_bets, sp_p2_bets,
+                     f"{p1_name} Bets", f"{p2_name} Bets", "Spread/Runline — Bets %")
+        extra_axes[1].set_ylabel("Bets %", fontsize=10)
+
+    # Format x-axis on bottom subplot
+    bottom_ax = axes[-1]
     if isinstance(times[0], datetime):
-        ax3.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d %H:%M"))
-        ax3.tick_params(axis="x", rotation=45)
-    
+        bottom_ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d %H:%M"))
+        bottom_ax.tick_params(axis="x", rotation=45)
+    bottom_ax.set_xlabel("Capture Time", fontsize=10)
+
     plt.tight_layout()
 
     if save_path or league:
