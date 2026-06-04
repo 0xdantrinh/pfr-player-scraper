@@ -229,7 +229,7 @@ def plot_game(game_data: dict, league: str = "", show: bool = True, save_path: s
         bottom_ax.tick_params(axis="x", rotation=45)
     bottom_ax.set_xlabel("Capture Time", fontsize=10)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
 
     if save_path or league:
         if not save_path and league:
