@@ -1,0 +1,115 @@
+{
+  "matchup": "Athletics @ CHI Cubs",
+  "separator": "@",
+  "participant1": "Athletics",
+  "participant2": "CHI Cubs",
+  "participant1_slug": "athletics",
+  "participant2_slug": "cubs-chi",
+  "game_datetime": "6/4, 08:05PM",
+  "participant1_odds": "+123",
+  "participant2_odds": "-148",
+  "participant1_handle_pct": 77,
+  "participant2_handle_pct": 23,
+  "participant1_bets_pct": 32,
+  "participant2_bets_pct": 68,
+  "p2_sharp_delta": -45,
+  "p1_sharp_delta": 45,
+  "total": {
+    "line": "10",
+    "over_bets_pct": 58,
+    "under_bets_pct": 42,
+    "over_handle_pct": 77,
+    "under_handle_pct": 23,
+    "over_odds": "-116",
+    "under_odds": "-104",
+    "over_sharp_delta": 19
+  },
+  "spread": {
+    "participant1_line": "+1.5",
+    "participant2_line": "-1.5",
+    "participant1_odds": "-175",
+    "participant2_odds": "+144",
+    "participant1_handle_pct": 87,
+    "participant2_handle_pct": 13,
+    "participant1_bets_pct": 47,
+    "participant2_bets_pct": 53,
+    "p1_sharp_delta": 40,
+    "p2_sharp_delta": -40
+  },
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:32.375804+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    77
+  ],
+  "participant2_handle_pct_history": [
+    23
+  ],
+  "participant1_bets_pct_history": [
+    32
+  ],
+  "participant2_bets_pct_history": [
+    68
+  ],
+  "p1_sharp_delta_history": [
+    45
+  ],
+  "p2_sharp_delta_history": [
+    -45
+  ],
+  "participant1_odds_history": [
+    "+123"
+  ],
+  "participant2_odds_history": [
+    "-148"
+  ],
+  "total_over_bets_pct_history": [
+    58
+  ],
+  "total_under_bets_pct_history": [
+    42
+  ],
+  "total_over_handle_pct_history": [
+    77
+  ],
+  "total_under_handle_pct_history": [
+    23
+  ],
+  "total_over_odds_history": [
+    "-116"
+  ],
+  "total_under_odds_history": [
+    "-104"
+  ],
+  "total_over_sharp_delta_history": [
+    19
+  ],
+  "spread_participant1_bets_pct_history": [
+    47
+  ],
+  "spread_participant2_bets_pct_history": [
+    53
+  ],
+  "spread_participant1_handle_pct_history": [
+    87
+  ],
+  "spread_participant2_handle_pct_history": [
+    13
+  ],
+  "spread_participant1_odds_history": [
+    "-175"
+  ],
+  "spread_participant2_odds_history": [
+    "+144"
+  ],
+  "spread_p1_sharp_delta_history": [
+    40
+  ],
+  "spread_p2_sharp_delta_history": [
+    -40
+  ],
+  "captured_at_history": [
+    "2026-06-04T23:18:32.375804+00:00"
+  ]
+}

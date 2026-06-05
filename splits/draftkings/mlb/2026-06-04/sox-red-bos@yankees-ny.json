@@ -1,0 +1,63 @@
+{
+  "matchup": "BOS Red Sox @ NY Yankees",
+  "separator": "@",
+  "participant1": "BOS Red Sox",
+  "participant2": "NY Yankees",
+  "participant1_slug": "sox-red-bos",
+  "participant2_slug": "yankees-ny",
+  "game_datetime": "6/5, 07:05PM",
+  "participant1_odds": "+123",
+  "participant2_odds": "-149",
+  "participant1_handle_pct": 0,
+  "participant2_handle_pct": 100,
+  "participant1_bets_pct": 0,
+  "participant2_bets_pct": 100,
+  "p2_sharp_delta": 0,
+  "p1_sharp_delta": 0,
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:37.091329+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    0
+  ],
+  "participant2_handle_pct_history": [
+    100
+  ],
+  "participant1_bets_pct_history": [
+    0
+  ],
+  "participant2_bets_pct_history": [
+    100
+  ],
+  "p1_sharp_delta_history": [
+    0
+  ],
+  "p2_sharp_delta_history": [
+    0
+  ],
+  "participant1_odds_history": [
+    "+123"
+  ],
+  "participant2_odds_history": [
+    "-149"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-04T23:18:37.091329+00:00"
+  ]
+}

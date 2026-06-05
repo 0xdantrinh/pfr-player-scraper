@@ -1,0 +1,91 @@
+{
+  "matchup": "CHI White Sox @ PHI Phillies",
+  "separator": "@",
+  "participant1": "CHI White Sox",
+  "participant2": "PHI Phillies",
+  "participant1_slug": "sox-white-chi",
+  "participant2_slug": "phillies-phi",
+  "game_datetime": "6/5, 06:40PM",
+  "participant1_odds": "+159",
+  "participant2_odds": "-194",
+  "participant1_handle_pct": 18,
+  "participant2_handle_pct": 82,
+  "participant1_bets_pct": 33,
+  "participant2_bets_pct": 67,
+  "p2_sharp_delta": 15,
+  "p1_sharp_delta": -15,
+  "spread": {
+    "participant1_line": "+1.5",
+    "participant2_line": "-1.5",
+    "participant1_odds": "-131",
+    "participant2_odds": "+109",
+    "participant1_handle_pct": 0,
+    "participant2_handle_pct": 100,
+    "participant1_bets_pct": 0,
+    "participant2_bets_pct": 100,
+    "p1_sharp_delta": 0,
+    "p2_sharp_delta": 0
+  },
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:36.353943+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    18
+  ],
+  "participant2_handle_pct_history": [
+    82
+  ],
+  "participant1_bets_pct_history": [
+    33
+  ],
+  "participant2_bets_pct_history": [
+    67
+  ],
+  "p1_sharp_delta_history": [
+    -15
+  ],
+  "p2_sharp_delta_history": [
+    15
+  ],
+  "participant1_odds_history": [
+    "+159"
+  ],
+  "participant2_odds_history": [
+    "-194"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [
+    0
+  ],
+  "spread_participant2_bets_pct_history": [
+    100
+  ],
+  "spread_participant1_handle_pct_history": [
+    0
+  ],
+  "spread_participant2_handle_pct_history": [
+    100
+  ],
+  "spread_participant1_odds_history": [
+    "-131"
+  ],
+  "spread_participant2_odds_history": [
+    "+109"
+  ],
+  "spread_p1_sharp_delta_history": [
+    0
+  ],
+  "spread_p2_sharp_delta_history": [
+    0
+  ],
+  "captured_at_history": [
+    "2026-06-04T23:18:36.353943+00:00"
+  ]
+}

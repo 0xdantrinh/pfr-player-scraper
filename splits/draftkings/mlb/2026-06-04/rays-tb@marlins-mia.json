@@ -1,0 +1,91 @@
+{
+  "matchup": "TB Rays @ MIA Marlins",
+  "separator": "@",
+  "participant1": "TB Rays",
+  "participant2": "MIA Marlins",
+  "participant1_slug": "rays-tb",
+  "participant2_slug": "marlins-mia",
+  "game_datetime": "6/5, 07:10PM",
+  "participant1_odds": "-143",
+  "participant2_odds": "+119",
+  "participant1_handle_pct": 100,
+  "participant2_handle_pct": 0,
+  "participant1_bets_pct": 83,
+  "participant2_bets_pct": 17,
+  "p2_sharp_delta": -17,
+  "p1_sharp_delta": 17,
+  "spread": {
+    "participant1_line": "-1.5",
+    "participant2_line": "+1.5",
+    "participant1_odds": "+113",
+    "participant2_odds": "-136",
+    "participant1_handle_pct": 23,
+    "participant2_handle_pct": 77,
+    "participant1_bets_pct": 25,
+    "participant2_bets_pct": 75,
+    "p1_sharp_delta": -2,
+    "p2_sharp_delta": 2
+  },
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:37.842607+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    100
+  ],
+  "participant2_handle_pct_history": [
+    0
+  ],
+  "participant1_bets_pct_history": [
+    83
+  ],
+  "participant2_bets_pct_history": [
+    17
+  ],
+  "p1_sharp_delta_history": [
+    17
+  ],
+  "p2_sharp_delta_history": [
+    -17
+  ],
+  "participant1_odds_history": [
+    "-143"
+  ],
+  "participant2_odds_history": [
+    "+119"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [
+    25
+  ],
+  "spread_participant2_bets_pct_history": [
+    75
+  ],
+  "spread_participant1_handle_pct_history": [
+    23
+  ],
+  "spread_participant2_handle_pct_history": [
+    77
+  ],
+  "spread_participant1_odds_history": [
+    "+113"
+  ],
+  "spread_participant2_odds_history": [
+    "-136"
+  ],
+  "spread_p1_sharp_delta_history": [
+    -2
+  ],
+  "spread_p2_sharp_delta_history": [
+    2
+  ],
+  "captured_at_history": [
+    "2026-06-04T23:18:37.842607+00:00"
+  ]
+}

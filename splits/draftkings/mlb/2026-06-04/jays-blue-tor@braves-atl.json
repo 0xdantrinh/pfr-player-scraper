@@ -1,0 +1,115 @@
+{
+  "matchup": "TOR Blue Jays @ ATL Braves",
+  "separator": "@",
+  "participant1": "TOR Blue Jays",
+  "participant2": "ATL Braves",
+  "participant1_slug": "jays-blue-tor",
+  "participant2_slug": "braves-atl",
+  "game_datetime": "6/4, 07:15PM",
+  "participant1_odds": "+210",
+  "participant2_odds": "-261",
+  "participant1_handle_pct": 23,
+  "participant2_handle_pct": 77,
+  "participant1_bets_pct": 14,
+  "participant2_bets_pct": 86,
+  "p2_sharp_delta": -9,
+  "p1_sharp_delta": 9,
+  "total": {
+    "line": "7.5",
+    "over_bets_pct": 64,
+    "under_bets_pct": 36,
+    "over_handle_pct": 81,
+    "under_handle_pct": 19,
+    "over_odds": "-105",
+    "under_odds": "-115",
+    "over_sharp_delta": 17
+  },
+  "spread": {
+    "participant1_line": "+1.5",
+    "participant2_line": "-1.5",
+    "participant1_odds": "-107",
+    "participant2_odds": "-113",
+    "participant1_handle_pct": 3,
+    "participant2_handle_pct": 97,
+    "participant1_bets_pct": 11,
+    "participant2_bets_pct": 89,
+    "p1_sharp_delta": -8,
+    "p2_sharp_delta": 8
+  },
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:28.662626+00:00",
+  "mr_vegas_flag": true,
+  "participant1_handle_pct_history": [
+    23
+  ],
+  "participant2_handle_pct_history": [
+    77
+  ],
+  "participant1_bets_pct_history": [
+    14
+  ],
+  "participant2_bets_pct_history": [
+    86
+  ],
+  "p1_sharp_delta_history": [
+    9
+  ],
+  "p2_sharp_delta_history": [
+    -9
+  ],
+  "participant1_odds_history": [
+    "+210"
+  ],
+  "participant2_odds_history": [
+    "-261"
+  ],
+  "total_over_bets_pct_history": [
+    64
+  ],
+  "total_under_bets_pct_history": [
+    36
+  ],
+  "total_over_handle_pct_history": [
+    81
+  ],
+  "total_under_handle_pct_history": [
+    19
+  ],
+  "total_over_odds_history": [
+    "-105"
+  ],
+  "total_under_odds_history": [
+    "-115"
+  ],
+  "total_over_sharp_delta_history": [
+    17
+  ],
+  "spread_participant1_bets_pct_history": [
+    11
+  ],
+  "spread_participant2_bets_pct_history": [
+    89
+  ],
+  "spread_participant1_handle_pct_history": [
+    3
+  ],
+  "spread_participant2_handle_pct_history": [
+    97
+  ],
+  "spread_participant1_odds_history": [
+    "-107"
+  ],
+  "spread_participant2_odds_history": [
+    "-113"
+  ],
+  "spread_p1_sharp_delta_history": [
+    -8
+  ],
+  "spread_p2_sharp_delta_history": [
+    8
+  ],
+  "captured_at_history": [
+    "2026-06-04T23:18:28.662626+00:00"
+  ]
+}

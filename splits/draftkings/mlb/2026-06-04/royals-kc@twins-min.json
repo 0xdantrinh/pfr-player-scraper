@@ -1,0 +1,117 @@
+{
+  "matchup": "KC Royals @ MIN Twins",
+  "separator": "@",
+  "participant1": "KC Royals",
+  "participant2": "MIN Twins",
+  "participant1_slug": "royals-kc",
+  "participant2_slug": "twins-min",
+  "game_datetime": "6/5, 08:15PM",
+  "participant1_odds": "-105",
+  "participant2_odds": "-115",
+  "participant1_handle_pct": 1,
+  "participant2_handle_pct": 99,
+  "participant1_bets_pct": 75,
+  "participant2_bets_pct": 25,
+  "p2_sharp_delta": 74,
+  "p1_sharp_delta": -74,
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:38.588621+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    73,
+    1
+  ],
+  "participant2_handle_pct_history": [
+    27,
+    99
+  ],
+  "participant1_bets_pct_history": [
+    65,
+    75
+  ],
+  "participant2_bets_pct_history": [
+    35,
+    25
+  ],
+  "p1_sharp_delta_history": [
+    8,
+    -74
+  ],
+  "p2_sharp_delta_history": [
+    -8,
+    74
+  ],
+  "participant1_odds_history": [
+    "-118",
+    "-105"
+  ],
+  "participant2_odds_history": [
+    "-102",
+    "-115"
+  ],
+  "total_over_bets_pct_history": [
+    59,
+    null
+  ],
+  "total_under_bets_pct_history": [
+    41,
+    null
+  ],
+  "total_over_handle_pct_history": [
+    86,
+    null
+  ],
+  "total_under_handle_pct_history": [
+    14,
+    null
+  ],
+  "total_over_odds_history": [
+    "-103",
+    null
+  ],
+  "total_under_odds_history": [
+    "-117",
+    null
+  ],
+  "total_over_sharp_delta_history": [
+    27,
+    null
+  ],
+  "spread_participant1_bets_pct_history": [
+    42,
+    null
+  ],
+  "spread_participant2_bets_pct_history": [
+    58,
+    null
+  ],
+  "spread_participant1_handle_pct_history": [
+    72,
+    null
+  ],
+  "spread_participant2_handle_pct_history": [
+    28,
+    null
+  ],
+  "spread_participant1_odds_history": [
+    "+135",
+    null
+  ],
+  "spread_participant2_odds_history": [
+    "-163",
+    null
+  ],
+  "spread_p1_sharp_delta_history": [
+    30,
+    null
+  ],
+  "spread_p2_sharp_delta_history": [
+    -30,
+    null
+  ],
+  "captured_at_history": [
+    "2026-06-04T23:18:31.304809+00:00",
+    "2026-06-04T23:18:38.588621+00:00"
+  ]
+}

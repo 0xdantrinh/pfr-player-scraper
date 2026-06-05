@@ -1,0 +1,115 @@
+{
+  "matchup": "SEA Mariners @ DET Tigers",
+  "separator": "@",
+  "participant1": "SEA Mariners",
+  "participant2": "DET Tigers",
+  "participant1_slug": "mariners-sea",
+  "participant2_slug": "tigers-det",
+  "game_datetime": "6/5, 06:40PM",
+  "participant1_odds": "-131",
+  "participant2_odds": "+109",
+  "participant1_handle_pct": 100,
+  "participant2_handle_pct": 0,
+  "participant1_bets_pct": 80,
+  "participant2_bets_pct": 20,
+  "p2_sharp_delta": -20,
+  "p1_sharp_delta": 20,
+  "total": {
+    "line": "8",
+    "over_bets_pct": 0,
+    "under_bets_pct": 100,
+    "over_handle_pct": 0,
+    "under_handle_pct": 100,
+    "over_odds": "-105",
+    "under_odds": "-114",
+    "over_sharp_delta": 0
+  },
+  "spread": {
+    "participant1_line": "-1.5",
+    "participant2_line": "+1.5",
+    "participant1_odds": "+129",
+    "participant2_odds": "-156",
+    "participant1_handle_pct": 0,
+    "participant2_handle_pct": 100,
+    "participant1_bets_pct": 0,
+    "participant2_bets_pct": 100,
+    "p1_sharp_delta": 0,
+    "p2_sharp_delta": 0
+  },
+  "league": "mlb",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-04T23:18:35.453852+00:00",
+  "mr_vegas_flag": false,
+  "participant1_handle_pct_history": [
+    100
+  ],
+  "participant2_handle_pct_history": [
+    0
+  ],
+  "participant1_bets_pct_history": [
+    80
+  ],
+  "participant2_bets_pct_history": [
+    20
+  ],
+  "p1_sharp_delta_history": [
+    20
+  ],
+  "p2_sharp_delta_history": [
+    -20
+  ],
+  "participant1_odds_history": [
+    "-131"
+  ],
+  "participant2_odds_history": [
+    "+109"
+  ],
+  "total_over_bets_pct_history": [
+    0
+  ],
+  "total_under_bets_pct_history": [
+    100
+  ],
+  "total_over_handle_pct_history": [
+    0
+  ],
+  "total_under_handle_pct_history": [
+    100
+  ],
+  "total_over_odds_history": [
+    "-105"
+  ],
+  "total_under_odds_history": [
+    "-114"
+  ],
+  "total_over_sharp_delta_history": [
+    0
+  ],
+  "spread_participant1_bets_pct_history": [
+    0
+  ],
+  "spread_participant2_bets_pct_history": [
+    100
+  ],
+  "spread_participant1_handle_pct_history": [
+    0
+  ],
+  "spread_participant2_handle_pct_history": [
+    100
+  ],
+  "spread_participant1_odds_history": [
+    "+129"
+  ],
+  "spread_participant2_odds_history": [
+    "-156"
+  ],
+  "spread_p1_sharp_delta_history": [
+    0
+  ],
+  "spread_p2_sharp_delta_history": [
+    0
+  ],
+  "captured_at_history": [
+    "2026-06-04T23:18:35.453852+00:00"
+  ]
+}
