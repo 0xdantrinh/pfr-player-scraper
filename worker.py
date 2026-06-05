@@ -100,15 +100,33 @@ def process_message(msg):
         key  = f"college/{slug}.json"
 
         # Guard: only skip if the scraped name doesn't match the pfrId.
-        # Never filter by position or stats presence — a TE with only receiving
-        # stats, a blocker with no stats, or any other edge case is still valid.
+        # SR CFB uses SPA navigation — stale JS state can cause the wrong
+        # player name to appear in the h1 even on the correct URL. If the
+        # name check fails, destroy the session and retry ONCE before giving up.
         if pfr_player_id:
             scraped_name = data.get("player_info", {}).get("name", "")
             if not _name_matches_pfr_id(scraped_name, pfr_player_id):
                 logging.warning(
-                    f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id}"
+                    f"Name mismatch for {key}: got '{scraped_name}', expected pfrId {pfr_player_id} "
+                    f"— clearing CFB session and retrying once"
                 )
-                return
+                # Force-clear the CFB session to evict stale JS state
+                try:
+                    requests.post(FLARESOLVERR_URL,
+                                  json={"cmd": "sessions.destroy", "session": CFB_SESSION},
+                                  timeout=10)
+                except Exception:
+                    pass
+                time.sleep(3)  # Let Chrome fully unload before next fetch
+                html = fetch_page(url)
+                data = parse_cfb_page(html, url)
+                scraped_name = data.get("player_info", {}).get("name", "")
+                if not _name_matches_pfr_id(scraped_name, pfr_player_id):
+                    logging.warning(
+                        f"SKIP {key}: name '{scraped_name}' still doesn't match pfrId {pfr_player_id} after retry"
+                    )
+                    return
+                logging.info(f"Retry succeeded: '{scraped_name}' matches {pfr_player_id}")
 
     else:
         data      = parse_page(html, url)
