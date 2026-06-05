@@ -101,23 +101,17 @@ def process_message(msg):
 
         # Guard: only skip if the scraped name doesn't match the pfrId.
         # SR CFB uses SPA navigation — stale JS state can cause the wrong
-        # player name to appear in the h1 even on the correct URL. If the
-        # name check fails, destroy the session and retry ONCE before giving up.
+        # player name in the h1 even on the correct URL. Retry ONCE after a
+        # brief sleep (DO NOT destroy the session — that nukes Cloudflare
+        # cookies and forces a 25-30s challenge solve on every retry).
         if pfr_player_id:
             scraped_name = data.get("player_info", {}).get("name", "")
             if not _name_matches_pfr_id(scraped_name, pfr_player_id):
                 logging.warning(
                     f"Name mismatch for {key}: got '{scraped_name}', expected pfrId {pfr_player_id} "
-                    f"— clearing CFB session and retrying once"
+                    f"— sleeping 2s and retrying once (keeping session cookies intact)"
                 )
-                # Force-clear the CFB session to evict stale JS state
-                try:
-                    requests.post(FLARESOLVERR_URL,
-                                  json={"cmd": "sessions.destroy", "session": CFB_SESSION},
-                                  timeout=10)
-                except Exception:
-                    pass
-                time.sleep(3)  # Let Chrome fully unload before next fetch
+                time.sleep(2)  # Brief pause lets SPA JS clear stale state
                 html = fetch_page(url)
                 data = parse_cfb_page(html, url)
                 scraped_name = data.get("player_info", {}).get("name", "")
