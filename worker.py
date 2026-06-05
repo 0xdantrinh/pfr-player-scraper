@@ -23,8 +23,9 @@ AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 SESSION_ROTATE_EVERY   = int(os.environ.get("SESSION_ROTATE_EVERY", "150"))
 FLARESOLVERR_CONTAINER = os.environ.get("FLARESOLVERR_CONTAINER", "flaresolverr")
 # After a docker restart, sleep this many seconds before the next request.
-# Gives Cloudflare's IP rate-limit time to relax between recovery attempts.
-POST_RESTART_SLEEP = int(os.environ.get("POST_RESTART_SLEEP", "3"))
+# Needs to be long enough for Chrome to fully initialize and clear previous
+# page state — 3s was too short, causing stale JS h1 from prior page.
+POST_RESTART_SLEEP = int(os.environ.get("POST_RESTART_SLEEP", "10"))
 # Normal inter-request delay range (seconds). Increase if hitting rate limits.
 DELAY_MIN = float(os.environ.get("DELAY_MIN", "3.0"))
 DELAY_MAX = float(os.environ.get("DELAY_MAX", "8.0"))
@@ -198,6 +199,10 @@ def loop():
                                           timeout=15)
                         except Exception:
                             pass
+                    # Brief pause after session destroy so the browser fully clears
+                    # JS state before the next page is loaded — prevents stale h1
+                    # from the previous page appearing on the next player's page.
+                    time.sleep(2)
 
             except PageNotFoundError as e:
                 # 404s are expected — discard quietly without restarting
