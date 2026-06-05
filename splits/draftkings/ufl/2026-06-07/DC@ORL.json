@@ -6,8 +6,8 @@
   "participant1_slug": "DC",
   "participant2_slug": "ORL",
   "game_datetime": "6/7, 03:00PM",
-  "participant1_odds": "+154",
-  "participant2_odds": "-185",
+  "participant1_odds": "+142",
+  "participant2_odds": "-170",
   "participant1_handle_pct": 0,
   "participant2_handle_pct": 100,
   "participant1_bets_pct": 0,
@@ -16,7 +16,7 @@
   "p1_sharp_delta": 0,
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-06-04T22:00:35.821712+00:00",
+  "captured_at": "2026-06-05T02:41:35.589952+00:00",
   "mr_vegas_flag": false,
   "participant1_handle_pct_history": [
     15,
@@ -24,6 +24,7 @@
     70,
     77,
     77,
+    0,
     0,
     0
   ],
@@ -34,6 +35,7 @@
     23,
     23,
     100,
+    100,
     100
   ],
   "participant1_bets_pct_history": [
@@ -42,6 +44,7 @@
     18,
     18,
     17,
+    0,
     0,
     0
   ],
@@ -52,6 +55,7 @@
     82,
     83,
     100,
+    100,
     100
   ],
   "p1_sharp_delta_history": [
@@ -60,6 +64,7 @@
     52,
     59,
     60,
+    0,
     0,
     0
   ],
@@ -70,6 +75,7 @@
     -59,
     -60,
     0,
+    0,
     0
   ],
   "participant1_odds_history": [
@@ -79,7 +85,8 @@
     "+154",
     "+154",
     "+154",
-    "+154"
+    "+154",
+    "+142"
   ],
   "participant2_odds_history": [
     "-185",
@@ -88,7 +95,53 @@
     "-185",
     "-185",
     "-185",
-    "-185"
+    "-185",
+    "-170"
+  ],
+  "total_over_bets_pct_history": [
+    null
+  ],
+  "total_under_bets_pct_history": [
+    null
+  ],
+  "total_over_handle_pct_history": [
+    null
+  ],
+  "total_under_handle_pct_history": [
+    null
+  ],
+  "total_over_odds_history": [
+    null
+  ],
+  "total_under_odds_history": [
+    null
+  ],
+  "total_over_sharp_delta_history": [
+    null
+  ],
+  "spread_participant1_bets_pct_history": [
+    null
+  ],
+  "spread_participant2_bets_pct_history": [
+    null
+  ],
+  "spread_participant1_handle_pct_history": [
+    null
+  ],
+  "spread_participant2_handle_pct_history": [
+    null
+  ],
+  "spread_participant1_odds_history": [
+    null
+  ],
+  "spread_participant2_odds_history": [
+    null
+  ],
+  "spread_p1_sharp_delta_history": [
+    null
+  ],
+  "spread_p2_sharp_delta_history": [
+    null
   ],
   "captured_at_history": [
     "2026-06-01T05:50:04.936779+00:00",
@@ -97,6 +150,7 @@
     "2026-06-02T17:49:31.780954+00:00",
     "2026-06-03T16:40:32.621684+00:00",
     "2026-06-04T21:56:49.740955+00:00",
-    "2026-06-04T22:00:35.821712+00:00"
+    "2026-06-04T22:00:35.821712+00:00",
+    "2026-06-05T02:41:35.589952+00:00"
   ]
 }
