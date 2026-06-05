@@ -269,8 +269,10 @@ def _sao_parse_moneyline(text: str) -> list[dict]:
         b1, b2, h1, h2, o1, o2 = _sao_pcts_odds(text, m.end())
         if b1 is None:
             continue
-        pre = text[max(0, m.start() - 200):m.start()]
-        dt_m = dt_pat.search(pre)
+        # Look back and forward to find the closest date/time
+        pre = text[max(0, m.start() - 500):m.start()]
+        post = text[m.end():min(len(text), m.end() + 500)]
+        dt_m = dt_pat.search(pre) or dt_pat.search(post)
         game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
         sharp2 = (h2 - b2) if h2 is not None and b2 is not None else None
         results.append({
