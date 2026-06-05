@@ -742,8 +742,9 @@ def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str
             )
         html  = fetch_sao_html(league)
         games = parse_sao_games(html)
-        out_subdir = os.path.join(OUTPUT_DIR, "betmgm_caesars", league, today)
-        s3_prefix  = f"betmgm_caesars/{league}/{today}"
+        # Will be overridden per-game with correct game date
+        out_subdir = os.path.join(OUTPUT_DIR, "betmgm_caesars", league, "{game_date}")
+        s3_prefix  = f"betmgm_caesars/{league}/{{game_date}}"
         log.info("Parsed %d games from ScoresAndOdds (BetMGM+Caesars)", len(games))
     else:
         event_group = EVENT_GROUPS.get(league)
@@ -756,8 +757,9 @@ def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str
                  f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=0")
         html  = fetch_rendered_html(url, league)
         games = parse_dk_all_html(html)
-        out_subdir = None
-        s3_prefix  = None
+        # Will be overridden per-game with correct game date
+        out_subdir = os.path.join(OUTPUT_DIR, "draftkings", league, "{game_date}")
+        s3_prefix  = f"draftkings/{league}/{{game_date}}"
         log.info("Parsed %d games from DraftKings Network (All types)", len(games))
 
     saved = []
@@ -775,13 +777,10 @@ def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str
             sharp_label,
         )
 
-        # For BetMGM, use the source-specific prefix with game date
-        game_subdir = None
-        game_s3_prefix = None
-        if source == "betmgm_caesars":
-            game_date = parse_game_date(game["game_datetime"])
-            game_subdir = os.path.join(OUTPUT_DIR, "betmgm_caesars", league, game_date)
-            game_s3_prefix = f"betmgm_caesars/{league}/{game_date}"
+        # Substitute game date into templates
+        game_date = parse_game_date(game["game_datetime"])
+        game_subdir = out_subdir.format(game_date=game_date) if out_subdir else None
+        game_s3_prefix = s3_prefix.format(game_date=game_date) if s3_prefix else None
 
         path = save_game(game, league, dry_run,
                          source=source, out_subdir=game_subdir, s3_prefix=game_s3_prefix)
