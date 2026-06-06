@@ -19,14 +19,13 @@ CFB_SESSION = "cfb-main"
 
 
 def fetch_page(url):
-    # Fast request first (no challenge interaction)
     session = CFB_SESSION if "sports-reference.com/cfb" in url else PFR_SESSION
     payload = {
         "cmd": "request.get",
         "url": url,
         "session": session,
         "session_ttl_minutes": 60,
-        "maxTimeout": 60000
+        "maxTimeout": 60000,
     }
 
     r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 70))
