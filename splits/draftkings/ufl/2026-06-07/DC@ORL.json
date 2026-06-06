@@ -6,17 +6,39 @@
   "participant1_slug": "DC",
   "participant2_slug": "ORL",
   "game_datetime": "6/7, 03:00PM",
-  "participant1_odds": "+142",
-  "participant2_odds": "-170",
+  "participant1_odds": "+145",
+  "participant2_odds": "-175",
   "participant1_handle_pct": 0,
   "participant2_handle_pct": 100,
   "participant1_bets_pct": 0,
   "participant2_bets_pct": 100,
   "p2_sharp_delta": 0,
   "p1_sharp_delta": 0,
+  "total": {
+    "line": "47.5",
+    "over_bets_pct": 100,
+    "under_bets_pct": 0,
+    "over_handle_pct": 100,
+    "under_handle_pct": 0,
+    "over_odds": "-118",
+    "under_odds": "-102",
+    "over_sharp_delta": 0
+  },
+  "spread": {
+    "participant1_line": "+3",
+    "participant2_line": "-3",
+    "participant1_odds": "-108",
+    "participant2_odds": "-112",
+    "participant1_handle_pct": 76,
+    "participant2_handle_pct": 24,
+    "participant1_bets_pct": 50,
+    "participant2_bets_pct": 50,
+    "p1_sharp_delta": 26,
+    "p2_sharp_delta": -26
+  },
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-06-05T16:50:58.801206+00:00",
+  "captured_at": "2026-06-06T19:11:45.370867+00:00",
   "mr_vegas_flag": false,
   "participant1_handle_pct_history": [
     15,
@@ -24,6 +46,7 @@
     70,
     77,
     77,
+    0,
     0,
     0,
     0,
@@ -38,6 +61,7 @@
     100,
     100,
     100,
+    100,
     100
   ],
   "participant1_bets_pct_history": [
@@ -46,6 +70,7 @@
     18,
     18,
     17,
+    0,
     0,
     0,
     0,
@@ -60,6 +85,7 @@
     100,
     100,
     100,
+    100,
     100
   ],
   "p1_sharp_delta_history": [
@@ -68,6 +94,7 @@
     52,
     59,
     60,
+    0,
     0,
     0,
     0,
@@ -82,6 +109,7 @@
     0,
     0,
     0,
+    0,
     0
   ],
   "participant1_odds_history": [
@@ -93,7 +121,8 @@
     "+154",
     "+154",
     "+142",
-    "+142"
+    "+142",
+    "+145"
   ],
   "participant2_odds_history": [
     "-185",
@@ -104,67 +133,83 @@
     "-185",
     "-185",
     "-170",
-    "-170"
+    "-170",
+    "-175"
   ],
   "total_over_bets_pct_history": [
     null,
-    null
+    null,
+    100
   ],
   "total_under_bets_pct_history": [
     null,
-    null
+    null,
+    0
   ],
   "total_over_handle_pct_history": [
     null,
-    null
+    null,
+    100
   ],
   "total_under_handle_pct_history": [
     null,
-    null
+    null,
+    0
   ],
   "total_over_odds_history": [
     null,
-    null
+    null,
+    "-118"
   ],
   "total_under_odds_history": [
     null,
-    null
+    null,
+    "-102"
   ],
   "total_over_sharp_delta_history": [
     null,
-    null
+    null,
+    0
   ],
   "spread_participant1_bets_pct_history": [
     null,
-    null
+    null,
+    50
   ],
   "spread_participant2_bets_pct_history": [
     null,
-    null
+    null,
+    50
   ],
   "spread_participant1_handle_pct_history": [
     null,
-    null
+    null,
+    76
   ],
   "spread_participant2_handle_pct_history": [
     null,
-    null
+    null,
+    24
   ],
   "spread_participant1_odds_history": [
     null,
-    null
+    null,
+    "-108"
   ],
   "spread_participant2_odds_history": [
     null,
-    null
+    null,
+    "-112"
   ],
   "spread_p1_sharp_delta_history": [
     null,
-    null
+    null,
+    26
   ],
   "spread_p2_sharp_delta_history": [
     null,
-    null
+    null,
+    -26
   ],
   "captured_at_history": [
     "2026-06-01T05:50:04.936779+00:00",
@@ -175,6 +220,7 @@
     "2026-06-04T21:56:49.740955+00:00",
     "2026-06-04T22:00:35.821712+00:00",
     "2026-06-05T02:41:35.589952+00:00",
-    "2026-06-05T16:50:58.801206+00:00"
+    "2026-06-05T16:50:58.801206+00:00",
+    "2026-06-06T19:11:45.370867+00:00"
   ]
 }
