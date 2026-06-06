@@ -127,15 +127,25 @@ def process_message(msg):
         player_id = data.get("player_id")
         key       = f"players/{player_id}.json"
 
-        # Guard: Cloudflare sometimes returns a cached page for a different player.
-        # Skip upload if the scraped name doesn't match the pfrId.
+        # Guard: FlareSolverr sometimes returns stale browser state from the previous
+        # player. Retry once after a brief sleep to let the JS clear.
         if pfr_player_id:
             scraped_name = data.get("player_info", {}).get("name", "")
             if scraped_name and not _name_matches_pfr_id(scraped_name, pfr_player_id):
                 logging.warning(
-                    f"SKIP {key}: name '{scraped_name}' doesn't match pfrId {pfr_player_id} — wrong page, will retry"
+                    f"Name mismatch for {key}: got '{scraped_name}', expected pfrId {pfr_player_id} "
+                    f"— sleeping 2s and retrying once (keeping session cookies intact)"
                 )
-                return
+                time.sleep(2)
+                html = fetch_page(url)
+                data = parse_page(html, url)
+                scraped_name = data.get("player_info", {}).get("name", "")
+                if scraped_name and not _name_matches_pfr_id(scraped_name, pfr_player_id):
+                    logging.warning(
+                        f"SKIP {key}: name '{scraped_name}' still doesn't match pfrId {pfr_player_id} after retry"
+                    )
+                    return
+                logging.info(f"Retry succeeded: '{scraped_name}' matches {pfr_player_id}")
 
     if pfr_player_id:
         data["pfr_player_id"] = pfr_player_id

@@ -26,10 +26,10 @@ def fetch_page(url):
         "url": url,
         "session": session,
         "session_ttl_minutes": 60,
-        "maxTimeout": 30000   # challenge typically solves in ~11s; if not solved in 30s it won't be
+        "maxTimeout": 60000
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 40))
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 70))
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
@@ -55,9 +55,9 @@ def fetch_page(url):
         print("Challenge detected, retrying with solver...")
 
         payload["tabs_till_verify"] = 5
-        payload["maxTimeout"] = 45000   # explicit challenge page — give a bit more headroom
+        payload["maxTimeout"] = 90000
 
-        r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 55))
+        r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 100))
         r.raise_for_status()
         data = r.json()
         page_status = data.get("solution", {}).get("status", 200)

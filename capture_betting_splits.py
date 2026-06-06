@@ -198,6 +198,14 @@ def parse_sao_games(html: str) -> list[dict]:
             game["total"] = total_list[i]
         if i < len(spread_list):
             game["spread"] = spread_list[i]
+            # Debug: log the dates being used
+            ml_dt = game.get("game_datetime", "")
+            spread_dt = spread_list[i].get("game_datetime")
+            log.info(f"DEBUG: ML_DT={ml_dt}, SPREAD_DT={spread_dt}")
+            # If moneyline date is late night (unreasonable game time), use spread date
+            if "12:30AM" in ml_dt or "1:00AM" in ml_dt or "2:00AM" in ml_dt or "3:00AM" in ml_dt:
+                if spread_dt:
+                    game["game_datetime"] = spread_dt
         games.append(game)
     return games
 
@@ -269,10 +277,25 @@ def _sao_parse_moneyline(text: str) -> list[dict]:
         b1, b2, h1, h2, o1, o2 = _sao_pcts_odds(text, m.end())
         if b1 is None:
             continue
-        # Look back and forward to find the closest date/time
-        pre = text[max(0, m.start() - 500):m.start()]
-        post = text[m.end():min(len(text), m.end() + 500)]
-        dt_m = dt_pat.search(pre) or dt_pat.search(post)
+        # Find the closest date by looking backward and taking the LAST match (closest to game)
+        pre = text[max(0, m.start() - 3000):m.start()]
+        dt_matches = list(dt_pat.finditer(pre))
+        log.info(f"DEBUG_MONEYLINE: Found {len(dt_matches)} dates: {[dt.group(0) for dt in dt_matches]}")
+        # Prefer reasonable game times (not 12:30 AM or other late night times)
+        dt_m = None
+        if dt_matches:
+            # Try the last matches first, but skip unreasonable times
+            for dt_match in reversed(dt_matches):
+                time_str = dt_match.group(2).upper()
+                if not ("12:30AM" in time_str or "1:00AM" in time_str or "2:00AM" in time_str):
+                    dt_m = dt_match
+                    break
+            # If all matches were bad times, use the last one anyway
+            if not dt_m:
+                dt_m = dt_matches[-1]
+        # Otherwise look forward
+        if not dt_m:
+            dt_m = dt_pat.search(text[m.end():min(len(text), m.end() + 500)])
         game_dt = f"{dt_m.group(1)} {dt_m.group(2)}" if dt_m else None
         sharp2 = (h2 - b2) if h2 is not None and b2 is not None else None
         results.append({
