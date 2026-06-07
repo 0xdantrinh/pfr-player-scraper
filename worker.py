@@ -154,11 +154,7 @@ def process_message(msg):
 
 
 def _restart_flaresolverr():
-    """Restart the FlareSolverr container — kills Chrome process tree, fresh fingerprint.
-
-    Called immediately on the first FlareSolverr failure. Each challenge timeout wastes
-    120 seconds, so there's no value in retrying before restarting.
-    """
+    """Restart the FlareSolverr container — last resort when the container itself is hung."""
     logging.warning("FlareSolverr error — restarting container '%s' ...", FLARESOLVERR_CONTAINER)
     try:
         subprocess.run(
