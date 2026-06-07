@@ -653,12 +653,22 @@ def save_game(game: dict, league: str, dry_run: bool,
         spread.get("participant2_odds"),
     )
     total = game.get("total") or {}
-    total_liability = calculate_vegas_liability(
+    _tl = calculate_vegas_liability(
         total.get("over_handle_pct"),
         total.get("under_handle_pct"),
         total.get("over_odds"),
         total.get("under_odds"),
     )
+    if _tl:
+        total_liability = {
+            "over_wins_net":  _tl["p1_wins_net"],
+            "under_wins_net": _tl["p2_wins_net"],
+            "exposed_side":   "over" if _tl["exposed_side"] == "p1" else
+                              "under" if _tl["exposed_side"] == "p2" else _tl["exposed_side"],
+            "exposed_amount": _tl["exposed_amount"],
+        }
+    else:
+        total_liability = None
 
     record = {
         **game,
