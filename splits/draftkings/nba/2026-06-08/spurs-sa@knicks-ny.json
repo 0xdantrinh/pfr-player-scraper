@@ -1,0 +1,133 @@
+{
+  "matchup": "SA Spurs @ NY Knicks",
+  "separator": "@",
+  "participant1": "SA Spurs",
+  "participant2": "NY Knicks",
+  "participant1_slug": "spurs-sa",
+  "participant2_slug": "knicks-ny",
+  "game_datetime": "6/8, 08:30PM",
+  "participant1_odds": "+114",
+  "participant2_odds": "-135",
+  "participant1_handle_pct": 71,
+  "participant2_handle_pct": 29,
+  "participant1_bets_pct": 63,
+  "participant2_bets_pct": 37,
+  "p2_sharp_delta": -8,
+  "p1_sharp_delta": 8,
+  "total": {
+    "line": "215.5",
+    "over_bets_pct": 58,
+    "under_bets_pct": 42,
+    "over_handle_pct": 12,
+    "under_handle_pct": 88,
+    "over_odds": "-115",
+    "under_odds": "-105",
+    "over_sharp_delta": -46
+  },
+  "spread": {
+    "participant1_line": "+2.5",
+    "participant2_line": "-2.5",
+    "participant1_odds": "-110",
+    "participant2_odds": "-110",
+    "participant1_handle_pct": 53,
+    "participant2_handle_pct": 47,
+    "participant1_bets_pct": 39,
+    "participant2_bets_pct": 61,
+    "p1_sharp_delta": 14,
+    "p2_sharp_delta": -14
+  },
+  "league": "nba",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-07T07:52:52.787970+00:00",
+  "mr_vegas_flag": false,
+  "vegas_liability": {
+    "p1_wins_net": -51.94,
+    "p2_wins_net": 49.52,
+    "exposed_side": "p1",
+    "exposed_amount": 51.94
+  },
+  "spread_vegas_liability": {
+    "p1_wins_net": -1.18,
+    "p2_wins_net": 10.27,
+    "exposed_side": "p1",
+    "exposed_amount": 1.18
+  },
+  "total_vegas_liability": {
+    "over_wins_net": 77.57,
+    "under_wins_net": -71.81,
+    "exposed_side": "under",
+    "exposed_amount": 71.81
+  },
+  "participant1_handle_pct_history": [
+    71
+  ],
+  "participant2_handle_pct_history": [
+    29
+  ],
+  "participant1_bets_pct_history": [
+    63
+  ],
+  "participant2_bets_pct_history": [
+    37
+  ],
+  "p1_sharp_delta_history": [
+    8
+  ],
+  "p2_sharp_delta_history": [
+    -8
+  ],
+  "participant1_odds_history": [
+    "+114"
+  ],
+  "participant2_odds_history": [
+    "-135"
+  ],
+  "total_over_bets_pct_history": [
+    58
+  ],
+  "total_under_bets_pct_history": [
+    42
+  ],
+  "total_over_handle_pct_history": [
+    12
+  ],
+  "total_under_handle_pct_history": [
+    88
+  ],
+  "total_over_odds_history": [
+    "-115"
+  ],
+  "total_under_odds_history": [
+    "-105"
+  ],
+  "total_over_sharp_delta_history": [
+    -46
+  ],
+  "spread_participant1_bets_pct_history": [
+    39
+  ],
+  "spread_participant2_bets_pct_history": [
+    61
+  ],
+  "spread_participant1_handle_pct_history": [
+    53
+  ],
+  "spread_participant2_handle_pct_history": [
+    47
+  ],
+  "spread_participant1_odds_history": [
+    "-110"
+  ],
+  "spread_participant2_odds_history": [
+    "-110"
+  ],
+  "spread_p1_sharp_delta_history": [
+    14
+  ],
+  "spread_p2_sharp_delta_history": [
+    -14
+  ],
+  "captured_at_history": [
+    "2026-06-07T07:52:52.787970+00:00"
+  ]
+}
