@@ -143,18 +143,30 @@ def calculate_vegas_liability(
         exposed_side = "p2"
         exposed_amount = round(abs(p2_wins_net), 2)
     elif p1_wins_net < 0 and p2_wins_net < 0:
-        # Exposed on both — pick the worse side
         exposed_side = "p1" if p1_wins_net < p2_wins_net else "p2"
         exposed_amount = round(max(abs(p1_wins_net), abs(p2_wins_net)), 2)
     else:
         exposed_side = "balanced"
         exposed_amount = 0.0
 
+    # Break-even shift: how many handle % points the exposed side needs to move to neutralize.
+    # Solve h_exposed = h_other × mult(other_odds) for neutral, then diff from current.
+    # Negative = handle needs to drop; positive = handle needs to rise.
+    if exposed_side == "p1":
+        be = round(h2 * m2, 2)
+        break_even_shift = round(be - h1, 2)
+    elif exposed_side == "p2":
+        be = round(h1 * m1, 2)
+        break_even_shift = round(be - h2, 2)
+    else:
+        break_even_shift = 0.0
+
     return {
         "p1_wins_net": p1_wins_net,
         "p2_wins_net": p2_wins_net,
         "exposed_side": exposed_side,
         "exposed_amount": exposed_amount,
+        "break_even_shift": break_even_shift,
     }
 
 
