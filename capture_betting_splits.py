@@ -101,6 +101,63 @@ def participant_slug(name: str) -> str:
     return "-".join(reversed(parts)) if len(parts) > 1 else clean.lower()
 
 
+def _payout_mult(odds_str: str | None) -> float | None:
+    """Net payout multiplier from American odds string.
+    +150 → 1.50 (bettor wins $1.50 per $1 wagered)
+    -150 → 0.667 (bettor wins $0.667 per $1 wagered)
+    """
+    if not odds_str:
+        return None
+    try:
+        v = int(str(odds_str).replace("+", "").replace("−", "-").replace("–", "-"))
+        return v / 100 if v > 0 else 100 / abs(v)
+    except (ValueError, ZeroDivisionError):
+        return None
+
+
+def calculate_vegas_liability(
+    p1_handle_pct: int | None,
+    p2_handle_pct: int | None,
+    p1_odds: str | None,
+    p2_odds: str | None,
+) -> dict | None:
+    """Vegas net P&L per $100 total handle if each side wins.
+
+    Positive = Vegas profits, negative = Vegas is exposed (liability).
+    """
+    m1 = _payout_mult(p1_odds)
+    m2 = _payout_mult(p2_odds)
+    if None in (p1_handle_pct, p2_handle_pct, m1, m2):
+        return None
+
+    h1 = p1_handle_pct  # already out of 100
+    h2 = p2_handle_pct
+
+    p1_wins_net = round(h2 - h1 * m1, 2)
+    p2_wins_net = round(h1 - h2 * m2, 2)
+
+    if p1_wins_net < 0 and p2_wins_net >= 0:
+        exposed_side = "p1"
+        exposed_amount = round(abs(p1_wins_net), 2)
+    elif p2_wins_net < 0 and p1_wins_net >= 0:
+        exposed_side = "p2"
+        exposed_amount = round(abs(p2_wins_net), 2)
+    elif p1_wins_net < 0 and p2_wins_net < 0:
+        # Exposed on both — pick the worse side
+        exposed_side = "p1" if p1_wins_net < p2_wins_net else "p2"
+        exposed_amount = round(max(abs(p1_wins_net), abs(p2_wins_net)), 2)
+    else:
+        exposed_side = "balanced"
+        exposed_amount = 0.0
+
+    return {
+        "p1_wins_net": p1_wins_net,
+        "p2_wins_net": p2_wins_net,
+        "exposed_side": exposed_side,
+        "exposed_amount": exposed_amount,
+    }
+
+
 def check_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None) -> bool:
     """
     Mr Vegas Theory: Vegas leans towards the dog to win.
@@ -581,12 +638,37 @@ def save_game(game: dict, league: str, dry_run: bool,
     # Source label: "draftkings-network" or "betmgm_caesars"
     source_label = "betmgm_caesars" if source == "betmgm_caesars" else "draftkings-network"
 
+    # Vegas liability — moneyline, spread, total
+    ml_liability = calculate_vegas_liability(
+        game.get("participant1_handle_pct"),
+        game.get("participant2_handle_pct"),
+        game.get("participant1_odds"),
+        game.get("participant2_odds"),
+    )
+    spread = game.get("spread") or {}
+    spread_liability = calculate_vegas_liability(
+        spread.get("participant1_handle_pct"),
+        spread.get("participant2_handle_pct"),
+        spread.get("participant1_odds"),
+        spread.get("participant2_odds"),
+    )
+    total = game.get("total") or {}
+    total_liability = calculate_vegas_liability(
+        total.get("over_handle_pct"),
+        total.get("under_handle_pct"),
+        total.get("over_odds"),
+        total.get("under_odds"),
+    )
+
     record = {
         **game,
         "league":      league,
         "source":      source_label,
         "captured_at": capture_time,
         "mr_vegas_flag": mr_vegas_flag,
+        **({"vegas_liability": ml_liability} if ml_liability else {}),
+        **({"spread_vegas_liability": spread_liability} if spread_liability else {}),
+        **({"total_vegas_liability": total_liability} if total_liability else {}),
         **history,          # ML + total_ + spread_ history arrays
         "captured_at_history": capture_times,
     }
