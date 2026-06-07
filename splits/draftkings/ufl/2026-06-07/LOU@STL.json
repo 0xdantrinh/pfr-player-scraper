@@ -6,57 +6,59 @@
   "participant1_slug": "LOU",
   "participant2_slug": "STL",
   "game_datetime": "6/7, 06:00PM",
-  "participant1_odds": "+102",
-  "participant2_odds": "-122",
-  "participant1_handle_pct": 38,
-  "participant2_handle_pct": 62,
-  "participant1_bets_pct": 21,
-  "participant2_bets_pct": 79,
-  "p2_sharp_delta": -17,
-  "p1_sharp_delta": 17,
+  "participant1_odds": "+110",
+  "participant2_odds": "-130",
+  "participant1_handle_pct": 50,
+  "participant2_handle_pct": 50,
+  "participant1_bets_pct": 37,
+  "participant2_bets_pct": 63,
+  "p2_sharp_delta": -13,
+  "p1_sharp_delta": 13,
   "total": {
-    "line": "45.5",
+    "line": "46.5",
     "over_bets_pct": 100,
     "under_bets_pct": 0,
     "over_handle_pct": 100,
     "under_handle_pct": 0,
-    "over_odds": "-115",
-    "under_odds": "-105",
+    "over_odds": "-105",
+    "under_odds": "-115",
     "over_sharp_delta": 0
   },
   "spread": {
-    "participant1_line": "+1.5",
-    "participant2_line": "-1.5",
-    "participant1_odds": "-108",
-    "participant2_odds": "-112",
-    "participant1_handle_pct": 25,
-    "participant2_handle_pct": 75,
-    "participant1_bets_pct": 50,
-    "participant2_bets_pct": 50,
-    "p1_sharp_delta": -25,
-    "p2_sharp_delta": 25
+    "participant1_line": "+2.5",
+    "participant2_line": "-2.5",
+    "participant1_odds": "-115",
+    "participant2_odds": "-105",
+    "participant1_handle_pct": 9,
+    "participant2_handle_pct": 91,
+    "participant1_bets_pct": 33,
+    "participant2_bets_pct": 67,
+    "p1_sharp_delta": -24,
+    "p2_sharp_delta": 24
   },
   "league": "ufl",
   "source": "draftkings-network",
-  "captured_at": "2026-06-07T07:50:35.697866+00:00",
+  "captured_at": "2026-06-07T18:16:16.310859+00:00",
   "mr_vegas_flag": false,
   "vegas_liability": {
-    "p1_wins_net": 23.24,
-    "p2_wins_net": -12.82,
-    "exposed_side": "p2",
-    "exposed_amount": 12.82
+    "p1_wins_net": -5.0,
+    "p2_wins_net": 11.54,
+    "exposed_side": "p1",
+    "exposed_amount": 5.0,
+    "break_even_shift": -11.54
   },
   "spread_vegas_liability": {
-    "p1_wins_net": 51.85,
-    "p2_wins_net": -41.96,
+    "p1_wins_net": 83.17,
+    "p2_wins_net": -77.67,
     "exposed_side": "p2",
-    "exposed_amount": 41.96
+    "exposed_amount": 77.67,
+    "break_even_shift": -83.17
   },
   "total_vegas_liability": {
-    "over_wins_net": -86.96,
+    "over_wins_net": -95.24,
     "under_wins_net": 100.0,
     "exposed_side": "over",
-    "exposed_amount": 86.96
+    "exposed_amount": 95.24
   },
   "participant1_handle_pct_history": [
     88,
@@ -69,7 +71,9 @@
     50,
     50,
     41,
-    38
+    38,
+    38,
+    50
   ],
   "participant2_handle_pct_history": [
     12,
@@ -82,7 +86,9 @@
     50,
     50,
     59,
-    62
+    62,
+    62,
+    50
   ],
   "participant1_bets_pct_history": [
     53,
@@ -95,7 +101,9 @@
     20,
     20,
     17,
-    21
+    21,
+    21,
+    37
   ],
   "participant2_bets_pct_history": [
     47,
@@ -108,7 +116,9 @@
     80,
     80,
     83,
-    79
+    79,
+    79,
+    63
   ],
   "p1_sharp_delta_history": [
     35,
@@ -121,7 +131,9 @@
     30,
     30,
     24,
-    17
+    17,
+    17,
+    13
   ],
   "p2_sharp_delta_history": [
     -35,
@@ -134,7 +146,9 @@
     -30,
     -30,
     -24,
-    -17
+    -17,
+    -17,
+    -13
   ],
   "participant1_odds_history": [
     "+124",
@@ -147,7 +161,9 @@
     "+100",
     "+105",
     "+102",
-    "+102"
+    "+102",
+    "+102",
+    "+110"
   ],
   "participant2_odds_history": [
     "-148",
@@ -160,11 +176,15 @@
     "-120",
     "-125",
     "-122",
-    "-122"
+    "-122",
+    "-122",
+    "-130"
   ],
   "total_over_bets_pct_history": [
     null,
     null,
+    100,
+    100,
     100,
     100
   ],
@@ -172,11 +192,15 @@
     null,
     null,
     0,
+    0,
+    0,
     0
   ],
   "total_over_handle_pct_history": [
     null,
     null,
+    100,
+    100,
     100,
     100
   ],
@@ -184,23 +208,31 @@
     null,
     null,
     0,
+    0,
+    0,
     0
   ],
   "total_over_odds_history": [
     null,
     null,
     "-115",
-    "-115"
+    "-115",
+    "-115",
+    "-105"
   ],
   "total_under_odds_history": [
     null,
     null,
     "-105",
-    "-105"
+    "-105",
+    "-105",
+    "-115"
   ],
   "total_over_sharp_delta_history": [
     null,
     null,
+    0,
+    0,
     0,
     0
   ],
@@ -208,49 +240,65 @@
     null,
     null,
     50,
-    50
+    50,
+    50,
+    33
   ],
   "spread_participant2_bets_pct_history": [
     null,
     null,
     50,
-    50
+    50,
+    50,
+    67
   ],
   "spread_participant1_handle_pct_history": [
     null,
     null,
     25,
-    25
+    25,
+    25,
+    9
   ],
   "spread_participant2_handle_pct_history": [
     null,
     null,
     75,
-    75
+    75,
+    75,
+    91
   ],
   "spread_participant1_odds_history": [
     null,
     null,
     "-108",
-    "-108"
+    "-108",
+    "-108",
+    "-115"
   ],
   "spread_participant2_odds_history": [
     null,
     null,
     "-112",
-    "-112"
+    "-112",
+    "-112",
+    "-105"
   ],
   "spread_p1_sharp_delta_history": [
     null,
     null,
     -25,
-    -25
+    -25,
+    -25,
+    -24
   ],
   "spread_p2_sharp_delta_history": [
     null,
     null,
     25,
-    25
+    25,
+    25,
+    24
   ],
   "captured_at_history": [
     "2026-06-01T05:51:21.285265+00:00",
@@ -263,6 +311,8 @@
     "2026-06-05T02:41:37.204678+00:00",
     "2026-06-05T16:51:00.720912+00:00",
     "2026-06-06T19:11:46.977093+00:00",
-    "2026-06-07T07:50:35.697866+00:00"
+    "2026-06-07T07:50:35.697866+00:00",
+    "2026-06-07T08:17:01.130488+00:00",
+    "2026-06-07T18:16:16.310859+00:00"
   ]
 }
