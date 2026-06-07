@@ -25,10 +25,10 @@ def fetch_page(url):
         "url": url,
         "session": session,
         "session_ttl_minutes": 60,
-        "maxTimeout": 20000,
+        "maxTimeout": 30000,
     }
 
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 30))
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=(10, 40))
 
     if r.status_code != 200:
         print("FlareSolverr error:", r.text)
