@@ -1,0 +1,71 @@
+{
+  "matchup": "Mauricio Ruffy vs Michael Chandler",
+  "separator": "vs",
+  "participant1": "Mauricio Ruffy",
+  "participant2": "Michael Chandler",
+  "participant1_slug": "ruffy-mauricio",
+  "participant2_slug": "chandler-michael",
+  "game_datetime": "6/14, 09:15PM",
+  "participant1_odds": "-700",
+  "participant2_odds": "+500",
+  "participant1_handle_pct": 15,
+  "participant2_handle_pct": 85,
+  "participant1_bets_pct": 40,
+  "participant2_bets_pct": 60,
+  "p2_sharp_delta": 25,
+  "p1_sharp_delta": -25,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-11T18:09:40.264997+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": false,
+  "vegas_liability": {
+    "p1_wins_net": 82.86,
+    "p2_wins_net": -410.0,
+    "exposed_side": "p2",
+    "exposed_amount": 410.0,
+    "break_even_shift": -82.86
+  },
+  "participant1_handle_pct_history": [
+    15
+  ],
+  "participant2_handle_pct_history": [
+    85
+  ],
+  "participant1_bets_pct_history": [
+    40
+  ],
+  "participant2_bets_pct_history": [
+    60
+  ],
+  "p1_sharp_delta_history": [
+    -25
+  ],
+  "p2_sharp_delta_history": [
+    25
+  ],
+  "participant1_odds_history": [
+    "-700"
+  ],
+  "participant2_odds_history": [
+    "+500"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-11T18:09:40.264997+00:00"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "matchup": "Josh Hokit vs Derrick Lewis",
+  "separator": "vs",
+  "participant1": "Josh Hokit",
+  "participant2": "Derrick Lewis",
+  "participant1_slug": "hokit-josh",
+  "participant2_slug": "lewis-derrick",
+  "game_datetime": "6/14, 09:45PM",
+  "participant1_odds": "-410",
+  "participant2_odds": "+320",
+  "participant1_handle_pct": 43,
+  "participant2_handle_pct": 57,
+  "participant1_bets_pct": 58,
+  "participant2_bets_pct": 42,
+  "p2_sharp_delta": 15,
+  "p1_sharp_delta": -15,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-11T18:09:40.871069+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": true,
+  "vegas_liability": {
+    "p1_wins_net": 46.51,
+    "p2_wins_net": -139.4,
+    "exposed_side": "p2",
+    "exposed_amount": 139.4,
+    "break_even_shift": -46.51
+  },
+  "participant1_handle_pct_history": [
+    43
+  ],
+  "participant2_handle_pct_history": [
+    57
+  ],
+  "participant1_bets_pct_history": [
+    58
+  ],
+  "participant2_bets_pct_history": [
+    42
+  ],
+  "p1_sharp_delta_history": [
+    -15
+  ],
+  "p2_sharp_delta_history": [
+    15
+  ],
+  "participant1_odds_history": [
+    "-410"
+  ],
+  "participant2_odds_history": [
+    "+320"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-11T18:09:40.871069+00:00"
+  ]
+}

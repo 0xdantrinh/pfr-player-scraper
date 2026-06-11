@@ -1,0 +1,71 @@
+{
+  "matchup": "Diego Lopes vs Steve Garcia",
+  "separator": "vs",
+  "participant1": "Diego Lopes",
+  "participant2": "Steve Garcia",
+  "participant1_slug": "lopes-diego",
+  "participant2_slug": "garcia-steve",
+  "game_datetime": "6/14, 08:15PM",
+  "participant1_odds": "-155",
+  "participant2_odds": "+130",
+  "participant1_handle_pct": 82,
+  "participant2_handle_pct": 18,
+  "participant1_bets_pct": 84,
+  "participant2_bets_pct": 16,
+  "p2_sharp_delta": 2,
+  "p1_sharp_delta": -2,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-11T18:09:38.409980+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": false,
+  "vegas_liability": {
+    "p1_wins_net": -34.9,
+    "p2_wins_net": 58.6,
+    "exposed_side": "p1",
+    "exposed_amount": 34.9,
+    "break_even_shift": -58.6
+  },
+  "participant1_handle_pct_history": [
+    82
+  ],
+  "participant2_handle_pct_history": [
+    18
+  ],
+  "participant1_bets_pct_history": [
+    84
+  ],
+  "participant2_bets_pct_history": [
+    16
+  ],
+  "p1_sharp_delta_history": [
+    -2
+  ],
+  "p2_sharp_delta_history": [
+    2
+  ],
+  "participant1_odds_history": [
+    "-155"
+  ],
+  "participant2_odds_history": [
+    "+130"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-11T18:09:38.409980+00:00"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "matchup": "Alex Pereira vs Ciryl Gane",
+  "separator": "vs",
+  "participant1": "Alex Pereira",
+  "participant2": "Ciryl Gane",
+  "participant1_slug": "pereira-alex",
+  "participant2_slug": "gane-ciryl",
+  "game_datetime": "6/14, 10:45PM",
+  "participant1_odds": "-108",
+  "participant2_odds": "-112",
+  "participant1_handle_pct": 83,
+  "participant2_handle_pct": 17,
+  "participant1_bets_pct": 83,
+  "participant2_bets_pct": 17,
+  "p2_sharp_delta": 0,
+  "p1_sharp_delta": 0,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-11T18:09:42.041240+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": false,
+  "vegas_liability": {
+    "p1_wins_net": -59.85,
+    "p2_wins_net": 67.82,
+    "exposed_side": "p1",
+    "exposed_amount": 59.85,
+    "break_even_shift": -67.82
+  },
+  "participant1_handle_pct_history": [
+    83
+  ],
+  "participant2_handle_pct_history": [
+    17
+  ],
+  "participant1_bets_pct_history": [
+    83
+  ],
+  "participant2_bets_pct_history": [
+    17
+  ],
+  "p1_sharp_delta_history": [
+    0
+  ],
+  "p2_sharp_delta_history": [
+    0
+  ],
+  "participant1_odds_history": [
+    "-108"
+  ],
+  "participant2_odds_history": [
+    "-112"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-11T18:09:42.041240+00:00"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "matchup": "Sean O'Malley vs Aiemann Zahabi",
+  "separator": "vs",
+  "participant1": "Sean O'Malley",
+  "participant2": "Aiemann Zahabi",
+  "participant1_slug": "o'malley-sean",
+  "participant2_slug": "zahabi-aiemann",
+  "game_datetime": "6/14, 10:15PM",
+  "participant1_odds": "-440",
+  "participant2_odds": "+340",
+  "participant1_handle_pct": 67,
+  "participant2_handle_pct": 33,
+  "participant1_bets_pct": 93,
+  "participant2_bets_pct": 7,
+  "p2_sharp_delta": 26,
+  "p1_sharp_delta": -26,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-11T18:09:41.411207+00:00",
+  "mr_vegas_flag": true,
+  "ufc_mr_vegas_flag": true,
+  "vegas_liability": {
+    "p1_wins_net": 17.77,
+    "p2_wins_net": -45.2,
+    "exposed_side": "p2",
+    "exposed_amount": 45.2,
+    "break_even_shift": -17.77
+  },
+  "participant1_handle_pct_history": [
+    67
+  ],
+  "participant2_handle_pct_history": [
+    33
+  ],
+  "participant1_bets_pct_history": [
+    93
+  ],
+  "participant2_bets_pct_history": [
+    7
+  ],
+  "p1_sharp_delta_history": [
+    -26
+  ],
+  "p2_sharp_delta_history": [
+    26
+  ],
+  "participant1_odds_history": [
+    "-440"
+  ],
+  "participant2_odds_history": [
+    "+340"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-11T18:09:41.411207+00:00"
+  ]
+}
