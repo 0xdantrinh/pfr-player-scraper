@@ -290,7 +290,9 @@ def main():
             p1_odds = game.get("participant1_odds")
             p2_odds = game.get("participant2_odds")
             mr_vegas = game.get("mr_vegas_flag")
+            ufc_mr_vegas = game.get("ufc_mr_vegas_flag")
             flag_str = " [MR VEGAS]" if mr_vegas else ""
+            flag_str += " [UFC MR VEGAS]" if ufc_mr_vegas else ""
             print(f"  {matchup} ({p1_odds} / {p2_odds}){flag_str}")
         print(f"\nTo plot a game, use: python plot_splits.py --league {args.league} --matchup <name>")
 

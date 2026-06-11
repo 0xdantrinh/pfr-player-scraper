@@ -218,6 +218,7 @@ Each run updates the local file and uploads to S3. Historical arrays track marke
 - **Market tracking**: Automatically maintains history arrays for handle %, bets %, and odds movement
 - **Sharp detection**: Calculates sharp action deltas (handle % - bets % spread)
 - **Mr Vegas flag**: Flags games where either participant has +180 or better odds (sticky flag persists once triggered)
+- **UFC Mr Vegas flag**: For UFC fights, flags when a +300+ underdog has tickets under 50% or handle under 40% (sticky flag persists once triggered)
 - **Auto-plotting**: Generates `plots/{league}/{away}@{home}.png` showing market movement (requires matplotlib)
 
 ### Dry run
@@ -749,17 +750,34 @@ Same logic applies to `total.over_sharp_delta` (over handle% − over bets%).
 
 ### Mr Vegas Theory
 
-`mr_vegas_flag` triggers if either participant's moneyline odds ever reached **+180 or better**. Once triggered the flag is **sticky** — it stays `true` even if the line tightens, because the initial signal is what matters.
+`mr_vegas_flag` triggers if either participant's moneyline odds ever reached **+180 or better** *while* the public bet (`bets_pct`) on that underdog was **under 30%** at capture time. Once triggered the flag is **sticky** — it stays `true` even if the line or splits move, because the initial signal is what matters.
 
 ```json
 {
   "matchup": "Dallas Renegades @ Louisville Kings",
-  "participant1_odds": "+114",
+  "participant1_odds": "+220",
+  "participant1_bets_pct": 18,
   "mr_vegas_flag": true
 }
 ```
 
-→ DAL or LOU hit +180+ at some point — classic Mr Vegas setup.
+→ DAL was +220 with only 18% of bets — public isn't on the dog despite the line, classic Mr Vegas setup.
+
+### UFC Mr Vegas Theory
+
+`ufc_mr_vegas_flag` (UFC fights only) triggers if either fighter's moneyline odds ever reached **+300 or better** *while* that fighter's bets % was under 50% or handle % was under 40%. Once triggered the flag is **sticky**.
+
+```json
+{
+  "matchup": "Ilia Topuria vs Justin Gaethje",
+  "participant2_odds": "+390",
+  "participant2_bets_pct": 34,
+  "participant2_handle_pct": 75,
+  "ufc_mr_vegas_flag": true
+}
+```
+
+→ Gaethje was +390 with only 34% of tickets — public isn't on the live dog, classic UFC Mr Vegas setup.
 
 ## Plotting Market Movement
 

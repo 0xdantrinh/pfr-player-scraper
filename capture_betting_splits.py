@@ -170,22 +170,23 @@ def calculate_vegas_liability(
     }
 
 
-def check_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None) -> bool:
+def check_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None,
+                        p1_bets_pct: int | None, p2_bets_pct: int | None) -> bool:
     """
     Mr Vegas Theory: Vegas leans towards the dog to win.
-    Flag triggers if either participant has odds of +180 or better.
+    Flag triggers if either participant has odds of +180 or better
+    AND the public bet (bets %) on that same underdog is under 30%.
     """
-    try:
-        # Parse odds strings like "+180", "-135"
-        for odds_str in [p1_odds, p2_odds]:
-            if not odds_str:
-                continue
+    for odds_str, bets_pct in [(p1_odds, p1_bets_pct), (p2_odds, p2_bets_pct)]:
+        if not odds_str:
+            continue
+        try:
             odds_val = int(odds_str.replace("+", "").replace("−", "-").replace("–", "-"))
-            # Positive odds of +180 or higher indicates underdog
-            if odds_val >= 180:
-                return True
-    except (ValueError, AttributeError):
-        pass
+        except (ValueError, AttributeError):
+            continue
+        # Positive odds of +180 or higher indicates underdog
+        if odds_val >= 180 and bets_pct is not None and bets_pct < 30:
+            return True
     return False
 
 
@@ -582,19 +583,66 @@ def build_history_arrays(current: dict, previous: dict | None) -> dict:
     return history
 
 
-def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odds: str | None, 
+def check_mr_vegas_flag_with_history(current_p1_odds: str | None, current_p2_odds: str | None,
+                                      current_p1_bets_pct: int | None, current_p2_bets_pct: int | None,
                                       previous: dict | None) -> bool:
     """
     Mr Vegas Theory: Vegas leans towards the dog to win.
-    Flag triggers if either participant has/had odds of +180 or better.
+    Flag triggers if either participant has/had odds of +180 or better
+    AND the public bet on that underdog is under 30% at capture time.
     Once true, the flag persists (sticky) because it validates the theory.
     """
     # If previous record had the flag, keep it true (sticky)
     if previous and previous.get("mr_vegas_flag") is True:
         return True
-    
-    # Check current odds
-    return check_mr_vegas_flag(current_p1_odds, current_p2_odds)
+
+    # Check current odds + current public betting split
+    return check_mr_vegas_flag(current_p1_odds, current_p2_odds, current_p1_bets_pct, current_p2_bets_pct)
+
+
+def check_ufc_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None,
+                             p1_bets_pct: int | None, p2_bets_pct: int | None,
+                             p1_handle_pct: int | None, p2_handle_pct: int | None) -> bool:
+    """
+    UFC Mr Vegas Theory: a live underdog (+300 or better) that the public
+    isn't backing — tickets under 50% or handle under 40% on that fighter —
+    gets flagged.
+    """
+    for odds_str, bets_pct, handle_pct in (
+        (p1_odds, p1_bets_pct, p1_handle_pct),
+        (p2_odds, p2_bets_pct, p2_handle_pct),
+    ):
+        if not odds_str:
+            continue
+        try:
+            odds_val = int(odds_str.replace("+", "").replace("−", "-").replace("–", "-"))
+        except (ValueError, AttributeError):
+            continue
+        if odds_val < 300:
+            continue
+        if (bets_pct is not None and bets_pct < 50) or (handle_pct is not None and handle_pct < 40):
+            return True
+    return False
+
+
+def check_ufc_mr_vegas_flag_with_history(league: str, current: dict, previous: dict | None) -> bool:
+    """
+    UFC Mr Vegas: sticky flag, only ever set for league == 'ufc'.
+    """
+    if league != "ufc":
+        return False
+
+    if previous and previous.get("ufc_mr_vegas_flag") is True:
+        return True
+
+    return check_ufc_mr_vegas_flag(
+        current.get("participant1_odds"),
+        current.get("participant2_odds"),
+        current.get("participant1_bets_pct"),
+        current.get("participant2_bets_pct"),
+        current.get("participant1_handle_pct"),
+        current.get("participant2_handle_pct"),
+    )
 
 
 def upload_to_s3(filepath: str, s3_prefix: str, filename: str) -> None:
@@ -640,8 +688,13 @@ def save_game(game: dict, league: str, dry_run: bool,
     mr_vegas_flag = check_mr_vegas_flag_with_history(
         game["participant1_odds"],
         game["participant2_odds"],
+        game.get("participant1_bets_pct"),
+        game.get("participant2_bets_pct"),
         previous
     )
+
+    # UFC-specific Mr Vegas flag — sticky, ufc only
+    ufc_mr_vegas_flag = check_ufc_mr_vegas_flag_with_history(league, game, previous)
 
     # Build history arrays with the current capture time
     capture_times = previous.get("captured_at_history", []) if previous else []
@@ -688,6 +741,7 @@ def save_game(game: dict, league: str, dry_run: bool,
         "source":      source_label,
         "captured_at": capture_time,
         "mr_vegas_flag": mr_vegas_flag,
+        **({"ufc_mr_vegas_flag": ufc_mr_vegas_flag} if league == "ufc" else {}),
         **({"vegas_liability": ml_liability} if ml_liability else {}),
         **({"spread_vegas_liability": spread_liability} if spread_liability else {}),
         **({"total_vegas_liability": total_liability} if total_liability else {}),
