@@ -6,66 +6,105 @@
   "participant1_slug": "nickal-bo",
   "participant2_slug": "daukaus-kyle",
   "game_datetime": "6/14, 08:45PM",
-  "participant1_odds": "-325",
-  "participant2_odds": "+260",
-  "participant1_handle_pct": 73,
-  "participant2_handle_pct": 27,
-  "participant1_bets_pct": 88,
-  "participant2_bets_pct": 12,
-  "p2_sharp_delta": 15,
-  "p1_sharp_delta": -15,
+  "participant1_odds": "-310",
+  "participant2_odds": "+250",
+  "participant1_handle_pct": 69,
+  "participant2_handle_pct": 31,
+  "participant1_bets_pct": 86,
+  "participant2_bets_pct": 14,
+  "p2_sharp_delta": 17,
+  "p1_sharp_delta": -17,
   "league": "ufc",
   "source": "draftkings-network",
-  "captured_at": "2026-06-11T18:09:39.544692+00:00",
+  "captured_at": "2026-06-12T07:18:42.034081+00:00",
   "mr_vegas_flag": true,
   "ufc_mr_vegas_flag": false,
   "vegas_liability": {
-    "p1_wins_net": 4.54,
-    "p2_wins_net": 2.8,
-    "exposed_side": "balanced",
-    "exposed_amount": 0.0,
-    "break_even_shift": 0.0
+    "p1_wins_net": 8.74,
+    "p2_wins_net": -8.5,
+    "exposed_side": "p2",
+    "exposed_amount": 8.5,
+    "break_even_shift": -8.74
   },
   "participant1_handle_pct_history": [
-    73
+    73,
+    69
   ],
   "participant2_handle_pct_history": [
-    27
+    27,
+    31
   ],
   "participant1_bets_pct_history": [
-    88
+    88,
+    86
   ],
   "participant2_bets_pct_history": [
-    12
+    12,
+    14
   ],
   "p1_sharp_delta_history": [
-    -15
+    -15,
+    -17
   ],
   "p2_sharp_delta_history": [
-    15
+    15,
+    17
   ],
   "participant1_odds_history": [
-    "-325"
+    "-325",
+    "-310"
   ],
   "participant2_odds_history": [
-    "+260"
+    "+260",
+    "+250"
   ],
-  "total_over_bets_pct_history": [],
-  "total_under_bets_pct_history": [],
-  "total_over_handle_pct_history": [],
-  "total_under_handle_pct_history": [],
-  "total_over_odds_history": [],
-  "total_under_odds_history": [],
-  "total_over_sharp_delta_history": [],
-  "spread_participant1_bets_pct_history": [],
-  "spread_participant2_bets_pct_history": [],
-  "spread_participant1_handle_pct_history": [],
-  "spread_participant2_handle_pct_history": [],
-  "spread_participant1_odds_history": [],
-  "spread_participant2_odds_history": [],
-  "spread_p1_sharp_delta_history": [],
-  "spread_p2_sharp_delta_history": [],
+  "total_over_bets_pct_history": [
+    null
+  ],
+  "total_under_bets_pct_history": [
+    null
+  ],
+  "total_over_handle_pct_history": [
+    null
+  ],
+  "total_under_handle_pct_history": [
+    null
+  ],
+  "total_over_odds_history": [
+    null
+  ],
+  "total_under_odds_history": [
+    null
+  ],
+  "total_over_sharp_delta_history": [
+    null
+  ],
+  "spread_participant1_bets_pct_history": [
+    null
+  ],
+  "spread_participant2_bets_pct_history": [
+    null
+  ],
+  "spread_participant1_handle_pct_history": [
+    null
+  ],
+  "spread_participant2_handle_pct_history": [
+    null
+  ],
+  "spread_participant1_odds_history": [
+    null
+  ],
+  "spread_participant2_odds_history": [
+    null
+  ],
+  "spread_p1_sharp_delta_history": [
+    null
+  ],
+  "spread_p2_sharp_delta_history": [
+    null
+  ],
   "captured_at_history": [
-    "2026-06-11T18:09:39.544692+00:00"
+    "2026-06-11T18:09:39.544692+00:00",
+    "2026-06-12T07:18:42.034081+00:00"
   ]
 }
