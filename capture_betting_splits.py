@@ -20,6 +20,7 @@ Usage:
 """
 
 import argparse
+import itertools
 import json
 import logging
 import os
@@ -168,6 +169,46 @@ def calculate_vegas_liability(
         "exposed_amount": exposed_amount,
         "break_even_shift": break_even_shift,
     }
+
+
+def compute_vegas_outcome_matrix(
+    ml_liability: dict | None,
+    spread_liability: dict | None,
+    total_liability: dict | None,
+) -> list[dict] | None:
+    """Vegas net P&L for every combination of ML winner x spread cover x total result.
+
+    Each leg's liability is evaluated independently elsewhere, but the book's
+    real exposure for a given final outcome is the sum across all three legs —
+    a game can net negative on the moneyline AND the spread and still be fine
+    for the book if the total result covers both losses.
+
+    Returns all 8 combinations (some may be unreachable for a given spread
+    line/favorite, but identifying which ones requires odds parsing this
+    keeps independent of — an unreachable cell's book_net is still a
+    well-defined number and harmless to include).
+    """
+    if None in (ml_liability, spread_liability, total_liability):
+        return None
+
+    matrix = []
+    for ml_side, spread_side, total_side in itertools.product(
+        ("p1", "p2"), ("p1", "p2"), ("over", "under")
+    ):
+        book_net = round(
+            ml_liability[f"{ml_side}_wins_net"]
+            + spread_liability[f"{spread_side}_wins_net"]
+            + total_liability[f"{total_side}_wins_net"],
+            2,
+        )
+        matrix.append({
+            "ml": ml_side,
+            "spread": spread_side,
+            "total": total_side,
+            "book_net": book_net,
+            "book_ok": book_net > 0,
+        })
+    return matrix
 
 
 def check_mr_vegas_flag(p1_odds: str | None, p2_odds: str | None,
@@ -735,6 +776,8 @@ def save_game(game: dict, league: str, dry_run: bool,
     else:
         total_liability = None
 
+    outcome_matrix = compute_vegas_outcome_matrix(ml_liability, spread_liability, total_liability)
+
     record = {
         **game,
         "league":      league,
@@ -745,6 +788,7 @@ def save_game(game: dict, league: str, dry_run: bool,
         **({"vegas_liability": ml_liability} if ml_liability else {}),
         **({"spread_vegas_liability": spread_liability} if spread_liability else {}),
         **({"total_vegas_liability": total_liability} if total_liability else {}),
+        **({"vegas_outcome_matrix": outcome_matrix} if outcome_matrix else {}),
         **history,          # ML + total_ + spread_ history arrays
         "captured_at_history": capture_times,
     }

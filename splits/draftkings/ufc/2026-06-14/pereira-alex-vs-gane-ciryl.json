@@ -8,103 +8,127 @@
   "game_datetime": "6/14, 10:45PM",
   "participant1_odds": "-108",
   "participant2_odds": "-112",
-  "participant1_handle_pct": 83,
-  "participant2_handle_pct": 17,
+  "participant1_handle_pct": 84,
+  "participant2_handle_pct": 16,
   "participant1_bets_pct": 82,
   "participant2_bets_pct": 18,
-  "p2_sharp_delta": -1,
-  "p1_sharp_delta": 1,
+  "p2_sharp_delta": -2,
+  "p1_sharp_delta": 2,
   "league": "ufc",
   "source": "draftkings-network",
-  "captured_at": "2026-06-12T07:18:44.440434+00:00",
+  "captured_at": "2026-06-13T23:09:52.665240+00:00",
   "mr_vegas_flag": false,
   "ufc_mr_vegas_flag": false,
   "vegas_liability": {
-    "p1_wins_net": -59.85,
-    "p2_wins_net": 67.82,
+    "p1_wins_net": -61.78,
+    "p2_wins_net": 69.71,
     "exposed_side": "p1",
-    "exposed_amount": 59.85,
-    "break_even_shift": -67.82
+    "exposed_amount": 61.78,
+    "break_even_shift": -69.71
   },
   "participant1_handle_pct_history": [
     83,
-    83
+    83,
+    84
   ],
   "participant2_handle_pct_history": [
     17,
-    17
+    17,
+    16
   ],
   "participant1_bets_pct_history": [
     83,
+    82,
     82
   ],
   "participant2_bets_pct_history": [
     17,
+    18,
     18
   ],
   "p1_sharp_delta_history": [
     0,
-    1
+    1,
+    2
   ],
   "p2_sharp_delta_history": [
     0,
-    -1
+    -1,
+    -2
   ],
   "participant1_odds_history": [
+    "-108",
     "-108",
     "-108"
   ],
   "participant2_odds_history": [
     "-112",
+    "-112",
     "-112"
   ],
   "total_over_bets_pct_history": [
+    null,
     null
   ],
   "total_under_bets_pct_history": [
+    null,
     null
   ],
   "total_over_handle_pct_history": [
+    null,
     null
   ],
   "total_under_handle_pct_history": [
+    null,
     null
   ],
   "total_over_odds_history": [
+    null,
     null
   ],
   "total_under_odds_history": [
+    null,
     null
   ],
   "total_over_sharp_delta_history": [
+    null,
     null
   ],
   "spread_participant1_bets_pct_history": [
+    null,
     null
   ],
   "spread_participant2_bets_pct_history": [
+    null,
     null
   ],
   "spread_participant1_handle_pct_history": [
+    null,
     null
   ],
   "spread_participant2_handle_pct_history": [
+    null,
     null
   ],
   "spread_participant1_odds_history": [
+    null,
     null
   ],
   "spread_participant2_odds_history": [
+    null,
     null
   ],
   "spread_p1_sharp_delta_history": [
+    null,
     null
   ],
   "spread_p2_sharp_delta_history": [
+    null,
     null
   ],
   "captured_at_history": [
     "2026-06-11T18:09:42.041240+00:00",
-    "2026-06-12T07:18:44.440434+00:00"
+    "2026-06-12T07:18:44.440434+00:00",
+    "2026-06-13T23:09:52.665240+00:00"
   ]
 }
