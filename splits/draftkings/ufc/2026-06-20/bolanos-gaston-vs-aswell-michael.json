@@ -1,0 +1,71 @@
+{
+  "matchup": "Gaston Bolanos vs Michael Aswell",
+  "separator": "vs",
+  "participant1": "Gaston Bolanos",
+  "participant2": "Michael Aswell",
+  "participant1_slug": "bolanos-gaston",
+  "participant2_slug": "aswell-michael",
+  "game_datetime": "6/20, 06:45PM",
+  "participant1_odds": "+300",
+  "participant2_odds": "-380",
+  "participant1_handle_pct": 0,
+  "participant2_handle_pct": 100,
+  "participant1_bets_pct": 0,
+  "participant2_bets_pct": 100,
+  "p2_sharp_delta": 0,
+  "p1_sharp_delta": 0,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-06-14T20:37:26.556424+00:00",
+  "mr_vegas_flag": true,
+  "ufc_mr_vegas_flag": true,
+  "vegas_liability": {
+    "p1_wins_net": 100.0,
+    "p2_wins_net": -26.32,
+    "exposed_side": "p2",
+    "exposed_amount": 26.32,
+    "break_even_shift": -100.0
+  },
+  "participant1_handle_pct_history": [
+    0
+  ],
+  "participant2_handle_pct_history": [
+    100
+  ],
+  "participant1_bets_pct_history": [
+    0
+  ],
+  "participant2_bets_pct_history": [
+    100
+  ],
+  "p1_sharp_delta_history": [
+    0
+  ],
+  "p2_sharp_delta_history": [
+    0
+  ],
+  "participant1_odds_history": [
+    "+300"
+  ],
+  "participant2_odds_history": [
+    "-380"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-06-14T20:37:26.556424+00:00"
+  ]
+}
