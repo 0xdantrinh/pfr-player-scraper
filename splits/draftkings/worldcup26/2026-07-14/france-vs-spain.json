@@ -1,0 +1,105 @@
+{
+  "matchup": "France vs Spain",
+  "separator": "vs",
+  "participant1": "France",
+  "participant2": "Spain",
+  "participant1_slug": "france",
+  "participant2_slug": "spain",
+  "game_datetime": "7/14, 03:00PM",
+  "participant1_odds": "+135",
+  "participant2_odds": "+220",
+  "participant1_handle_pct": 92,
+  "participant2_handle_pct": 8,
+  "participant1_bets_pct": 85,
+  "participant2_bets_pct": 15,
+  "p2_sharp_delta": -7,
+  "p1_sharp_delta": 7,
+  "spread": {
+    "participant1_line": "-0.25",
+    "participant2_line": "-0.25",
+    "participant1_odds": "-105",
+    "participant2_odds": "+165",
+    "participant1_handle_pct": 100,
+    "participant2_handle_pct": 0,
+    "participant1_bets_pct": 50,
+    "participant2_bets_pct": 0,
+    "p1_sharp_delta": 0,
+    "p2_sharp_delta": 0
+  },
+  "league": "worldcup26",
+  "source": "draftkings-network",
+  "captured_at": "2026-07-12T16:43:12.067354+00:00",
+  "mr_vegas_flag": true,
+  "vegas_liability": {
+    "p1_wins_net": -116.2,
+    "p2_wins_net": 74.4,
+    "exposed_side": "p1",
+    "exposed_amount": 116.2,
+    "break_even_shift": -74.4
+  },
+  "spread_vegas_liability": {
+    "p1_wins_net": -95.24,
+    "p2_wins_net": 100.0,
+    "exposed_side": "p1",
+    "exposed_amount": 95.24,
+    "break_even_shift": -100.0
+  },
+  "participant1_handle_pct_history": [
+    92
+  ],
+  "participant2_handle_pct_history": [
+    8
+  ],
+  "participant1_bets_pct_history": [
+    85
+  ],
+  "participant2_bets_pct_history": [
+    15
+  ],
+  "p1_sharp_delta_history": [
+    7
+  ],
+  "p2_sharp_delta_history": [
+    -7
+  ],
+  "participant1_odds_history": [
+    "+135"
+  ],
+  "participant2_odds_history": [
+    "+220"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [
+    50
+  ],
+  "spread_participant2_bets_pct_history": [
+    0
+  ],
+  "spread_participant1_handle_pct_history": [
+    100
+  ],
+  "spread_participant2_handle_pct_history": [
+    0
+  ],
+  "spread_participant1_odds_history": [
+    "-105"
+  ],
+  "spread_participant2_odds_history": [
+    "+165"
+  ],
+  "spread_p1_sharp_delta_history": [
+    0
+  ],
+  "spread_p2_sharp_delta_history": [
+    0
+  ],
+  "captured_at_history": [
+    "2026-07-12T16:43:12.067354+00:00"
+  ]
+}

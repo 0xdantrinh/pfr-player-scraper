@@ -1,0 +1,71 @@
+{
+  "matchup": "Anna Melisano vs Dione Barbosa",
+  "separator": "vs",
+  "participant1": "Anna Melisano",
+  "participant2": "Dione Barbosa",
+  "participant1_slug": "melisano-anna",
+  "participant2_slug": "barbosa-dione",
+  "game_datetime": "7/18, 03:00PM",
+  "participant1_odds": "+330",
+  "participant2_odds": "-425",
+  "participant1_handle_pct": 100,
+  "participant2_handle_pct": 0,
+  "participant1_bets_pct": 100,
+  "participant2_bets_pct": 0,
+  "p2_sharp_delta": 0,
+  "p1_sharp_delta": 0,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-07-12T16:40:07.066717+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": false,
+  "vegas_liability": {
+    "p1_wins_net": -330.0,
+    "p2_wins_net": 100.0,
+    "exposed_side": "p1",
+    "exposed_amount": 330.0,
+    "break_even_shift": -100.0
+  },
+  "participant1_handle_pct_history": [
+    100
+  ],
+  "participant2_handle_pct_history": [
+    0
+  ],
+  "participant1_bets_pct_history": [
+    100
+  ],
+  "participant2_bets_pct_history": [
+    0
+  ],
+  "p1_sharp_delta_history": [
+    0
+  ],
+  "p2_sharp_delta_history": [
+    0
+  ],
+  "participant1_odds_history": [
+    "+330"
+  ],
+  "participant2_odds_history": [
+    "-425"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-07-12T16:40:07.066717+00:00"
+  ]
+}

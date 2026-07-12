@@ -1,0 +1,71 @@
+{
+  "matchup": "Tabatha Ricci vs Fatima Kline",
+  "separator": "vs",
+  "participant1": "Tabatha Ricci",
+  "participant2": "Fatima Kline",
+  "participant1_slug": "ricci-tabatha",
+  "participant2_slug": "kline-fatima",
+  "game_datetime": "7/18, 07:45PM",
+  "participant1_odds": "+260",
+  "participant2_odds": "-325",
+  "participant1_handle_pct": 57,
+  "participant2_handle_pct": 43,
+  "participant1_bets_pct": 80,
+  "participant2_bets_pct": 20,
+  "p2_sharp_delta": 23,
+  "p1_sharp_delta": -23,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-07-12T16:40:10.675071+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": false,
+  "vegas_liability": {
+    "p1_wins_net": -105.2,
+    "p2_wins_net": 43.77,
+    "exposed_side": "p1",
+    "exposed_amount": 105.2,
+    "break_even_shift": -43.77
+  },
+  "participant1_handle_pct_history": [
+    57
+  ],
+  "participant2_handle_pct_history": [
+    43
+  ],
+  "participant1_bets_pct_history": [
+    80
+  ],
+  "participant2_bets_pct_history": [
+    20
+  ],
+  "p1_sharp_delta_history": [
+    -23
+  ],
+  "p2_sharp_delta_history": [
+    23
+  ],
+  "participant1_odds_history": [
+    "+260"
+  ],
+  "participant2_odds_history": [
+    "-325"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-07-12T16:40:10.675071+00:00"
+  ]
+}

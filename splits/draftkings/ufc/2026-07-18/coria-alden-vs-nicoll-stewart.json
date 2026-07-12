@@ -1,0 +1,71 @@
+{
+  "matchup": "Alden Coria vs Stewart Nicoll",
+  "separator": "vs",
+  "participant1": "Alden Coria",
+  "participant2": "Stewart Nicoll",
+  "participant1_slug": "coria-alden",
+  "participant2_slug": "nicoll-stewart",
+  "game_datetime": "7/18, 06:15PM",
+  "participant1_odds": "-1000",
+  "participant2_odds": "+650",
+  "participant1_handle_pct": 23,
+  "participant2_handle_pct": 77,
+  "participant1_bets_pct": 60,
+  "participant2_bets_pct": 40,
+  "p2_sharp_delta": 37,
+  "p1_sharp_delta": -37,
+  "league": "ufc",
+  "source": "draftkings-network",
+  "captured_at": "2026-07-12T16:40:08.526459+00:00",
+  "mr_vegas_flag": false,
+  "ufc_mr_vegas_flag": true,
+  "vegas_liability": {
+    "p1_wins_net": 74.7,
+    "p2_wins_net": -477.5,
+    "exposed_side": "p2",
+    "exposed_amount": 477.5,
+    "break_even_shift": -74.7
+  },
+  "participant1_handle_pct_history": [
+    23
+  ],
+  "participant2_handle_pct_history": [
+    77
+  ],
+  "participant1_bets_pct_history": [
+    60
+  ],
+  "participant2_bets_pct_history": [
+    40
+  ],
+  "p1_sharp_delta_history": [
+    -37
+  ],
+  "p2_sharp_delta_history": [
+    37
+  ],
+  "participant1_odds_history": [
+    "-1000"
+  ],
+  "participant2_odds_history": [
+    "+650"
+  ],
+  "total_over_bets_pct_history": [],
+  "total_under_bets_pct_history": [],
+  "total_over_handle_pct_history": [],
+  "total_under_handle_pct_history": [],
+  "total_over_odds_history": [],
+  "total_under_odds_history": [],
+  "total_over_sharp_delta_history": [],
+  "spread_participant1_bets_pct_history": [],
+  "spread_participant2_bets_pct_history": [],
+  "spread_participant1_handle_pct_history": [],
+  "spread_participant2_handle_pct_history": [],
+  "spread_participant1_odds_history": [],
+  "spread_participant2_odds_history": [],
+  "spread_p1_sharp_delta_history": [],
+  "spread_p2_sharp_delta_history": [],
+  "captured_at_history": [
+    "2026-07-12T16:40:08.526459+00:00"
+  ]
+}

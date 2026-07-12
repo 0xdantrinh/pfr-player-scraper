@@ -1,7 +1,7 @@
 """Capture betting splits (% Handle + % Bets) from multiple sources.
 
 Sources:
-  draftkings  — DraftKings Network (default). Single-book. Supports: ufl, ufc, nfl, nba, mlb
+  draftkings  — DraftKings Network (default). Single-book. Supports: ufl, ufc, nfl, nba, mlb, worldcup26
   betmgm_caesars — ScoresAndOdds.com consensus (BetMGM + Caesars combined).
                    Supports: nfl, nba, mlb, ncaaf, ncaab, nhl, wnba
 
@@ -27,6 +27,7 @@ import os
 import re
 import time
 from datetime import datetime, timezone, timedelta
+from urllib.parse import quote_plus
 
 import boto3
 import requests
@@ -56,12 +57,16 @@ if not SPLITS_S3_BUCKET:
 s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 EVENT_GROUPS = {
-    "ufl":  "212333",
-    "ufc":  "9034",
-    "nfl":  "88808",
-    "nba":  "42648",
-    "mlb":  "84240",
-    # Add more as needed — find the tb_eg value from the URL when on that sport's page
+    "ufl":         "UFL",
+    "ufc":         "UFC",
+    "nfl":         "NFL",
+    "nba":         "NBA",
+    "mlb":         "MLB",
+    "worldcup26":  "World Cup 2026",
+    # Values must match the <option> values in the site's own sport dropdown
+    # (name="tb_eg" on the betting-splits page) — DK switched this from numeric
+    # event-group IDs to plain sport-name strings; the old numeric IDs now
+    # silently fall back to unfiltered/generic content instead of erroring.
 }
 
 # ScoresAndOdds.com (BetMGM + Caesars aggregated data)
@@ -99,7 +104,10 @@ def participant_slug(name: str) -> str:
         return TEAM_ALIAS[clean]
     # For fighters/individuals: "Daniel Barez" → "barez-daniel"
     parts = clean.lower().split()
-    return "-".join(reversed(parts)) if len(parts) > 1 else clean.lower()
+    slug = "-".join(reversed(parts)) if len(parts) > 1 else clean.lower()
+    # Guard against path separators/colons leaking in from unexpected scrape
+    # text (e.g. an un-stripped date/time) and breaking the saved filepath.
+    return re.sub(r'[/\\:]', '-', slug)
 
 
 def _payout_mult(odds_str: str | None) -> float | None:
@@ -485,8 +493,16 @@ def parse_splits_html(html: str) -> list[dict]:
             continue
         title_text = title_el.get_text(" ", strip=True)
 
+        # Date/time is sometimes embedded in the title itself (e.g. UFC fighter
+        # matchups) — strip it before splitting on "vs"/"@" so it isn't
+        # swallowed into p2_name (which would otherwise leak a "/" into the
+        # saved filename).
+        dt_m = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', title_text, re.IGNORECASE)
+        game_dt = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
+        matchup_text = title_text[:dt_m.start()].strip() if dt_m else title_text
+
         # Try "@ " separator (team sports) then "vs" (individual sports like UFC)
-        sep_m = re.search(r'(.+?)\s+(@|vs\.?)\s+(.+?)(?:\s+opens|\s*$)', title_text, re.IGNORECASE)
+        sep_m = re.search(r'(.+?)\s+(@|vs\.?)\s+(.+?)(?:\s+opens|\s*$)', matchup_text, re.IGNORECASE)
         if not sep_m:
             continue
         p1_name   = sep_m.group(1).strip()
@@ -494,10 +510,11 @@ def parse_splits_html(html: str) -> list[dict]:
         p2_name   = sep_m.group(3).strip()
         is_team_sport = separator == "@"
 
-        # Date/time
-        block_text = block.get_text(" ", strip=True)
-        dt_m       = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', block_text)
-        game_dt    = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
+        # Fallback: use whole-block text if the title itself lacked a date/time
+        if game_dt is None:
+            block_text = block.get_text(" ", strip=True)
+            dt_m       = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', block_text)
+            game_dt    = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
 
         # Each tb-sodd div = one participant row
         rows = []
@@ -860,15 +877,21 @@ def parse_dk_all_html(html: str) -> list[dict]:
         if not title_el:
             continue
         title_text = title_el.get_text(" ", strip=True)
-        sep_m = re.search(r'(.+?)\s+(@|vs\.?)\s+(.+?)(?:\s+opens|\s*$)', title_text, re.IGNORECASE)
+
+        # Date/time is sometimes embedded in the title itself (e.g. UFC fighter
+        # matchups: "Katie Volynets vs Tatjana Maria 7/12, 12:30PM") — strip it
+        # before splitting on "vs"/"@" so it isn't swallowed into p2_name (which
+        # would otherwise leak a "/" into the saved filename).
+        dt_m = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', title_text, re.IGNORECASE)
+        game_dt = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
+        matchup_text = title_text[:dt_m.start()].strip() if dt_m else title_text
+
+        sep_m = re.search(r'(.+?)\s+(@|vs\.?)\s+(.+?)(?:\s+opens|\s*$)', matchup_text, re.IGNORECASE)
         if not sep_m:
             continue
         p1_name   = sep_m.group(1).strip()
         separator = sep_m.group(2).strip()
         p2_name   = sep_m.group(3).strip()
-
-        dt_m    = re.search(r'(\d{1,2}/\d{1,2}),?\s+(\d{1,2}:\d{2}(?:AM|PM))', title_text, re.IGNORECASE)
-        game_dt = f"{dt_m.group(1)}, {dt_m.group(2)}" if dt_m else None
 
         ml_data = spread_data = total_data = None
 
@@ -981,7 +1004,7 @@ def run_once(league: str, dry_run: bool, source: str = "draftkings") -> list[str
                 f"Choose from: {', '.join(EVENT_GROUPS)}"
             )
         url   = (f"https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
-                 f"?tb_eg={event_group}&tb_edate=n7days&tb_emt=0")
+                 f"?tb_eg={quote_plus(event_group)}&tb_edate=n7days&tb_emt=0")
         html  = fetch_rendered_html(url, league)
         games = parse_dk_all_html(html)
         # Will be overridden per-game with correct game date
